@@ -217,6 +217,8 @@ function render(){
       s.className=on?"":(dd>0?"p":dd<0?"n":"");
     });
   });
+  const ck=document.querySelector('.seg[data-key="cwe"]').previousElementSibling;
+  ck.innerHTML='加拿大经验'+(P.link?`<br><small style="color:var(--text-muted)">→ 届时 ${P.age} 岁</small>`:'');
   bands(t);
   // flag
   let f="";
