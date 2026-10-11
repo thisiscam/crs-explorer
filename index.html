@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRS 积分 · 交互图</title>
+<style>
+.viz-root{
+  color-scheme:light;
+  --surface-0:#f4f3f0; --surface-1:#fcfcfb; --border:#e2e0da; --grid:#ebe9e4;
+  --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#8a8882;
+  --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a;
+  --good:#008300; --bad:#c23b3a; --band:#dcdad4; --band-ok:#bfe3cf;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])) .viz-root{
+    color-scheme:dark;
+    --surface-0:#111110; --surface-1:#1a1a19; --border:#33322f; --grid:#2a2927;
+    --text-primary:#f0efec; --text-secondary:#c3c2b7; --text-muted:#8f8d86;
+    --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+    --good:#4cb84c; --bad:#e66767; --band:#3a3936; --band-ok:#1f4a33;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif}
+.viz-root{background:var(--surface-0);color:var(--text-primary);min-height:100vh;padding:14px;line-height:1.45}
+.wrap{max-width:980px;margin:0 auto}
+.card{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px}
+.top{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap}
+.score{font-size:64px;font-weight:750;letter-spacing:-2px;line-height:1;font-variant-numeric:tabular-nums}
+.delta{font-size:18px;font-weight:700;min-width:60px}
+.up{color:var(--good)} .down{color:var(--bad)}
+.stack{display:flex;height:12px;border-radius:4px;overflow:hidden;gap:2px;margin:12px 0 4px}
+.stack span{display:block;height:100%;transition:flex .35s ease}
+.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--text-secondary)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.legend b{color:var(--text-primary)}
+svg text{font-family:inherit}
+.marker{transition:transform .45s cubic-bezier(.2,.8,.2,1)}
+.ctl{display:grid;grid-template-columns:96px 1fr;gap:6px 10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--grid)}
+.ctl:last-child{border-bottom:0}
+.ctl .k{font-size:13px;color:var(--text-secondary)}
+.seg{display:flex;flex-wrap:wrap;gap:5px}
+.seg button{border:1px solid var(--border);background:var(--surface-1);color:var(--text-primary);border-radius:8px;padding:4px 9px 3px;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;min-width:44px;line-height:1.2}
+.seg button small{font-size:10.5px;color:var(--text-muted);font-variant-numeric:tabular-nums}
+.seg button small.p{color:var(--good);font-weight:600}
+.seg button small.n{color:var(--bad);font-weight:600}
+.seg button.on{background:var(--text-primary);color:var(--surface-1);border-color:var(--text-primary)}
+.seg button.on small{color:var(--surface-1);opacity:.7}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.presets button{border:1px solid var(--border);background:var(--surface-0);color:var(--text-primary);border-radius:999px;padding:4px 11px;font-size:12.5px;cursor:pointer}
+.presets button.on{background:var(--text-primary);color:var(--surface-1)}
+.flag{font-size:12px;margin-top:8px;color:var(--text-secondary)}
+.flag.bad{color:var(--bad)}
+details{font-size:12.5px;color:var(--text-secondary)}
+details summary{cursor:pointer;color:var(--text-muted)}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+td{padding:4px 6px;border-bottom:1px solid var(--grid)} td.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.sec td{font-weight:600}
+#tip{position:fixed;pointer-events:none;background:var(--text-primary);color:var(--surface-1);font-size:12px;padding:6px 8px;border-radius:6px;opacity:0;transition:opacity .1s;z-index:10}
+.foot{font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="viz-root">
+<div class="wrap">
+
+  <div class="card">
+    <div class="presets" id="presets"></div>
+    <div class="top" style="margin-top:12px">
+      <div class="score" id="total">0</div>
+      <div class="delta" id="delta"></div>
+    </div>
+    <div class="stack" id="stack"></div>
+    <div class="legend" id="legend"></div>
+    <div id="bands" style="margin-top:10px"></div>
+    <div class="flag" id="flag"></div>
+  </div>
+
+  <div class="card" id="controls"></div>
+
+  <div class="card">
+    <details><summary>分数明细表</summary><table id="detail"></table></details>
+    <details style="margin-top:6px"><summary>规则要点</summary>
+      <ul style="padding-left:18px;margin:6px 0">
+        <li>CEC：3 年内累计 1560 小时，每周最多算 30 小时，必须是 TEER 0–3 的工作；全日制学习期间的工作不算。</li>
+        <li>CEC 语言门槛：TEER 0/1 需要 CLB 7，TEER 2/3 需要 CLB 5。</li>
+        <li>类别抽签（医疗、技工）一般要求在该类职业连续工作 ≥ 6 个月（需核实）。</li>
+        <li>2025 年 3 月起 job offer 不再加分；30 岁起年龄分逐年递减。</li>
+      </ul>
+    </details>
+  </div>
+  <div class="foot">IRCC CRS 规则 · 抽签数据 2026-04-01 至 2026-10-01 · 仅供理解 · 小蟹 🦀</div>
+</div>
+<div id="tip"></div>
+</div>
+
+<script>
+// ===== IRCC CRS 规则（单身/配偶不随行） =====
+const EDU=[["高中",30,0],["1年",90,1],["2年",98,1],["本科",120,1],["双学历",128,2],["硕士",135,2],["博士",150,2]];
+function agePts(a){const s=[99,105,110,110,110,110,110,110,110,110,110,110,105,99,94,88,83,77,72,66,61,55,50,39,28,17,6];return a<18||a>44?0:s[a-18];}
+function l1(c){return c<4?0:c<=5?6:c==6?9:c==7?17:c==8?23:c==9?31:34;}
+function l2(c){return c<=4?0:c<=6?1:c<=8?3:6;}
+const CWE=[0,40,53,64,72,80];
+function crs(p){
+  const r={};
+  r.age=agePts(p.age); r.edu=EDU[p.edu][1];
+  const cw=p.teer==2?0:p.cwe;
+  r.l1=4*l1(p.en); r.l2=Math.min(24,4*l2(p.fr)); r.cwe=CWE[cw];
+  r.core=r.age+r.edu+r.l1+r.l2+r.cwe;
+  const tier=EDU[p.edu][2], lt=p.en>=9?2:p.en>=7?1:0, ct=cw>=2?2:cw==1?1:0;
+  const T=[[0,0,0],[0,13,25],[0,25,50]];
+  r.tEdu=Math.min(50,(lt?T[tier][lt]:0)+(ct?T[tier][ct]:0));
+  r.tFw=Math.min(50,(lt?T[p.fwe][lt]:0)+(ct?T[p.fwe][ct]:0));
+  r.transfer=Math.min(100,r.tEdu+r.tFw);
+  r.aSib=p.sib?15:0; r.aFr=p.fr>=7?(p.en>=5?50:25):0; r.aEdu=[0,15,30][p.cdn]; r.aPnp=p.pnp?600:0;
+  r.add=Math.min(600,r.aSib+r.aFr+r.aEdu+r.aPnp);
+  r.total=r.core+r.transfer+r.add; return r;
+}
+
+// ===== 抽签（最低分） =====
+const D={
+  "CEC":[["09-29",518],["09-15",519],["09-01",521],["08-18",523],["08-05",516],["07-21",516],["07-07",517],["06-23",516],["05-27",518],["04-28",514],["04-14",515]],
+  "医疗":[["09-04",475],["06-25",475]],
+  "技工":[["10-01",476],["04-02",477]],
+  "法语":[["08-19",382],["08-06",391],["07-22",399],["07-09",420],["05-28",409],["04-29",400],["04-15",419]],
+  "省提名":[["09-28",725],["09-14",734],["08-31",697],["08-17",760],["08-04",768],["07-20",744],["07-06",708],["06-22",730],["05-25",805],["05-11",798],["04-27",795],["04-13",786]],
+};
+const ELIG={
+  "CEC":p=>p.cwe>=1&&p.teer!=2&&p.en>=(p.teer==0?7:5),
+  "医疗":p=>p.hca?true:false,
+  "技工":p=>null,
+  "法语":p=>p.fr>=7,
+  "省提名":p=>p.pnp,
+};
+
+// ===== 控件 =====
+const CTL=[
+  ["年龄","age",[26,28,30,32,35].map(v=>[v,v+"岁"])],
+  ["英语 CLB","en",[6,7,8,9,10].map(v=>[v,"CLB "+v])],
+  ["法语 NCLC","fr",[0,5,7,9].map(v=>[v,v?("NCLC "+v):"无"])],
+  ["加拿大经验","cwe",[[0,"<1年"],[1,"1年"],[2,"2年"],[3,"3年"],[4,"4年"],[5,"5年+"]]],
+  ["工作 TEER","teer",[[0,"0/1"],[1,"2/3"],[2,"4/5"]]],
+  ["学历","edu",EDU.map((e,i)=>[i,e[0]])],
+  ["海外经验","fwe",[[0,"无"],[1,"1–2年"],[2,"3年+"]]],
+  ["加拿大学历","cdn",[[0,"无"],[1,"1–2年"],[2,"3年+"]]],
+  ["兄弟姐妹 PR","sib",[[false,"无"],[true,"有"]]],
+  ["HCA 满 6 个月","hca",[[false,"否"],[true,"是"]]],
+  ["省提名","pnp",[[false,"无"],[true,"有"]]],
+];
+const BASE={age:26,en:9,fr:0,cwe:1,teer:1,edu:5,fwe:0,cdn:1,sib:false,hca:false,pnp:false};
+const PRESETS=[["现在",{cwe:0}],["CEC 满 1 年",{}],["+ 法语 NCLC 7",{fr:7}],["+ HCA 6 个月",{hca:true}],["满 2 年",{cwe:2}],["英语只有 CLB 8",{en:8}]];
+let P={...BASE}, prev=null;
+
+const $=id=>document.getElementById(id);
+function buildControls(){
+  $("controls").innerHTML=CTL.map(([k,key,opts])=>`<div class="ctl"><div class="k">${k}</div><div class="seg" data-key="${key}">${
+    opts.map(([v,l])=>`<button data-v='${JSON.stringify(v)}'>${l}<small></small></button>`).join("")}</div></div>`).join("");
+  $("controls").querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{
+    const key=b.parentNode.dataset.key; P[key]=JSON.parse(b.dataset.v); clearPreset(); render();});
+  $("presets").innerHTML=PRESETS.map(([n],i)=>`<button data-i="${i}">${n}</button>`).join("");
+  $("presets").querySelectorAll("button").forEach(b=>b.onclick=()=>{P={...BASE,...PRESETS[b.dataset.i][1]};render();
+    clearPreset();b.classList.add("on");});
+  $("presets").children[1].classList.add("on");
+}
+function clearPreset(){[...$("presets").children].forEach(c=>c.classList.remove("on"));}
+
+function render(){
+  const r=crs(P), t=r.total;
+  // score + delta
+  $("total").textContent=t;
+  const d=prev==null?0:t-prev; prev=t;
+  $("delta").innerHTML=d?`<span class="${d>0?"up":"down"}">${d>0?"+":""}${d}</span>`:"";
+  // composition
+  const parts=[["核心",r.core,"var(--series-1)"],["可转移",r.transfer,"var(--series-2)"],["额外",r.add,"var(--series-3)"]];
+  $("stack").innerHTML=parts.map(p=>`<span style="flex:${p[1]||0.0001};background:${p[2]}"></span>`).join("");
+  $("legend").innerHTML=parts.map(p=>`<span><i style="background:${p[2]}"></i>${p[0]} <b>${p[1]}</b></span>`).join("");
+  // option deltas
+  document.querySelectorAll(".seg").forEach(seg=>{
+    const key=seg.dataset.key;
+    seg.querySelectorAll("button").forEach(b=>{
+      const v=JSON.parse(b.dataset.v), on=JSON.stringify(P[key])===b.dataset.v;
+      b.classList.toggle("on",on);
+      const dd=crs({...P,[key]:v}).total-t, s=b.querySelector("small");
+      const unlock=(key=="hca"&&v===true)||(key=="fr"&&v>=7&&P.fr<7);
+      s.textContent=on?"·":(dd>0?"+"+dd:dd<0?String(dd):(key=="hca"&&v===true?"解锁医疗":"±0"));
+      s.className=on?"":(dd>0?"p":dd<0?"n":"");
+    });
+  });
+  bands(t);
+  // flag
+  let f="";
+  if(P.teer==2) f="⛔ TEER 4/5 的工作不算 CEC，也不算 CRS 里的加拿大经验";
+  else if(P.cwe<1) f="⏳ 还没满 1 年，暂时不能走 CEC";
+  $("flag").textContent=f; $("flag").className="flag"+(P.teer==2?" bad":"");
+  // detail
+  const rows=[["核心",r.core,1],["年龄",r.age],["学历",r.edu],["英语",r.l1],["法语（第二语言）",r.l2],["加拿大经验",r.cwe],
+    ["可转移（上限 100）",r.transfer,1],["学历组合",r.tEdu],["海外经验组合",r.tFw],
+    ["额外",r.add,1],["兄弟姐妹",r.aSib],["法语加分",r.aFr],["加拿大学历",r.aEdu],["省提名",r.aPnp],["总分",t,1]];
+  $("detail").innerHTML=rows.map(([n,v,s])=>`<tr class="${s?"sec":""}"><td>${s?"":"　"}${n}</td><td class="n">${v}</td></tr>`).join("");
+}
+
+function bands(score){
+  const W=Math.max(300,$("bands").clientWidth||640),L=50,R=26,lo=360,hi=840,rowH=34,top=24;
+  const x=v=>L+(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*(W-L-R);
+  const cats=Object.keys(D), H=top+cats.length*rowH+18;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="各类抽签录取线与你的分数">`;
+  for(let v=400;v<=800;v+=(W<500?100:50)) s+=`<line x1="${x(v)}" x2="${x(v)}" y1="${top-4}" y2="${H-16}" stroke="var(--grid)"/><text x="${x(v)}" y="${H-3}" font-size="10.5" fill="var(--text-muted)" text-anchor="middle">${v}</text>`;
+  cats.forEach((c,i)=>{
+    const ds=D[c], y=top+i*rowH+rowH/2, mn=Math.min(...ds.map(d=>d[1])), mx=Math.max(...ds.map(d=>d[1]));
+    const el=ELIG[c](P), over=score>=ds[0][1];
+    const fill = el===false?"var(--band)":(over?"var(--band-ok)":"var(--band)");
+    const op = el===false?0.45:1;
+    s+=`<g opacity="${op}"><text x="${L-8}" y="${y+4}" font-size="12" fill="var(--text-primary)" text-anchor="end">${c}</text>`;
+    s+=`<rect x="${x(mn)-5}" y="${y-7}" width="${Math.max(10,x(mx)-x(mn)+10)}" height="14" rx="7" fill="${fill}"/>`;
+    ds.forEach(d=>{const t=`${c} ${d[0]}：${d[1]}`;
+      s+=`<circle cx="${x(d[1])}" cy="${y}" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>`+
+         `<circle class="hit" cx="${x(d[1])}" cy="${y}" r="11" fill="transparent" data-t="${t}"/>`;});
+    const g=score-ds[0][1];
+    s+=`<text x="${x(mx)+12}" y="${y+4}" font-size="11" font-weight="600" fill="${g>=0?"var(--good)":"var(--text-muted)"}">${el===false?"🔒":(g>=0?"✓":g)}</text></g>`;
+  });
+  s+=`<g class="marker" style="transform:translateX(${x(score)}px)"><line x1="0" x2="0" y1="${top-6}" y2="${H-16}" stroke="var(--text-primary)" stroke-width="2"/>`+
+     `<rect x="-20" y="0" width="40" height="17" rx="4" fill="var(--text-primary)"/><text x="0" y="12.5" font-size="11.5" font-weight="700" fill="var(--surface-1)" text-anchor="middle">${score}</text></g>`;
+  s+=`</svg>`;
+  $("bands").innerHTML=s;
+  const tip=$("tip");
+  $("bands").querySelectorAll(".hit").forEach(h=>{
+    const show=e=>{const p=e.touches?e.touches[0]:e;tip.textContent=h.dataset.t;tip.style.opacity=1;tip.style.left=Math.min(innerWidth-160,p.clientX+10)+"px";tip.style.top=(p.clientY+12)+"px";};
+    h.addEventListener("mousemove",show);h.addEventListener("mouseleave",()=>tip.style.opacity=0);
+    h.addEventListener("touchstart",e=>{show(e);setTimeout(()=>tip.style.opacity=0,1800);},{passive:true});
+  });
+}
+buildControls(); render();
+addEventListener("resize",()=>bands(crs(P).total));
+</script>
+</body>
+</html>
