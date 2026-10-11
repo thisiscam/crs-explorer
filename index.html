@@ -176,7 +176,7 @@ const CTL=[
   ["HCA 满 12 个月","hca",[[false,"否"],[true,"是"]]],
   ["省提名","pnp",[[false,"无"],[true,"有"]]],
 ];
-const BASE={link:true,age:26,en:9,fr:0,cwe:1,teer:1,edu:5,fwe:0,cdn:1,sib:true,hca:false,pnp:false};
+const BASE={link:true,age:26,en:9,fr:0,cwe:1,teer:1,edu:5,fwe:0,cdn:1,sib:false,hca:false,pnp:false};
 const PRESETS=[["现在",{cwe:0}],["CEC 满 1 年",{}],["+ 法语 NCLC 7",{fr:7}],["+ HCA 12 个月",{hca:true,cwe:2,age:27}],["满 2 年",{cwe:2,age:27}],["英语只有 CLB 8",{en:8}]];
 // 联动：经验每多 1 年，年龄也 +1（时间在流逝）
 function withVal(p,key,v){const q={...p,[key]:v}; if(key=="cwe"&&p.link) q.age=p.age+(v-p.cwe); return q;}
