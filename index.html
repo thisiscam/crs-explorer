@@ -58,6 +58,31 @@ table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
 td{padding:4px 6px;border-bottom:1px solid var(--grid)} td.n{text-align:right;font-variant-numeric:tabular-nums}
 tr.sec td{font-weight:600}
 #tip{position:fixed;pointer-events:none;background:var(--text-primary);color:var(--surface-1);font-size:12px;padding:6px 8px;border-radius:6px;opacity:0;transition:opacity .1s;z-index:10}
+
+.route{padding:9px 0;border-bottom:1px solid var(--grid)}
+.route:last-of-type{border-bottom:0}
+.rhead{display:flex;gap:8px;align-items:baseline;font-size:14px}
+.rhead .sub{font-size:12px;color:var(--text-muted)}
+.rbar{position:relative;height:16px;background:var(--grid);border-radius:4px;margin:22px 0 4px}
+.rbar .fill{position:absolute;top:0;bottom:0;left:0;background:var(--series-1);border-radius:4px;transition:width .4s,left .4s}
+.rbar .fill.over{background:var(--good)}
+.rbar .gap{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,var(--bad) 0 3px,transparent 3px 7px);opacity:.55;transition:width .4s,left .4s}
+.rbar .need{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--text-primary)}
+.rbar .need span{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:11px;white-space:nowrap;color:var(--text-secondary)}
+.rbar.locked{opacity:.4}
+.rstat{font-size:13px}
+.rstat .ok{color:var(--good);font-weight:600}.rstat .no{color:var(--bad)}.rstat .lk{color:var(--text-secondary)}
+.route-note{font-size:12px;color:var(--text-muted);margin:4px 0}
+.fixgap{margin-top:12px;padding:12px;background:var(--surface-0);border-radius:10px}
+.fg-title{font-size:14px;margin-bottom:8px}
+.fg-row{display:grid;grid-template-columns:120px 1fr 64px;gap:8px;align-items:center;font-size:13px;margin:6px 0}
+.fg-bar{position:relative;height:10px;background:var(--grid);border-radius:4px;margin-right:4px}
+.fg-bar div{height:100%;background:var(--series-2);border-radius:4px;transition:width .4s}
+.fg-bar div.enough{background:var(--good)}
+.fg-bar i{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--text-primary)}
+.fg-d{font-variant-numeric:tabular-nums;font-weight:600}
+.fg-hint{font-size:11.5px;color:var(--text-muted);margin-top:6px}
+.sec-title{font-size:13px;color:var(--text-muted);margin:14px 0 2px}
 .foot{font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px}
 </style>
 </head>
@@ -73,11 +98,12 @@ tr.sec td{font-weight:600}
     </div>
     <div class="stack" id="stack"></div>
     <div class="legend" id="legend"></div>
-    <div id="bands" style="margin-top:10px"></div>
+    <div class="sec-title">能不能被抽中？（和最近一次抽签的最低分比）</div>
+    <div id="bands"></div>
     <div class="flag" id="flag"></div>
   </div>
 
-  <div class="card" id="controls"></div>
+  <div class="card"><div class="sec-title" style="margin-top:0">改条件试试（按钮下的小字 = 选它分数变多少）</div><div id="controls"></div></div>
 
   <div class="card">
     <details><summary>分数明细表</summary><table id="detail"></table></details>
@@ -201,37 +227,49 @@ function render(){
 }
 
 function bands(score){
-  const W=Math.max(300,$("bands").clientWidth||640),L=50,R=26,lo=360,hi=840,rowH=34,top=24;
-  const x=v=>L+(Math.max(lo,Math.min(hi,v))-lo)/(hi-lo)*(W-L-R);
-  const cats=Object.keys(D), H=top+cats.length*rowH+18;
-  let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="各类抽签录取线与你的分数">`;
-  for(let v=400;v<=800;v+=(W<500?100:50)) s+=`<line x1="${x(v)}" x2="${x(v)}" y1="${top-4}" y2="${H-16}" stroke="var(--grid)"/><text x="${x(v)}" y="${H-3}" font-size="10.5" fill="var(--text-muted)" text-anchor="middle">${v}</text>`;
-  cats.forEach((c,i)=>{
-    const ds=D[c], y=top+i*rowH+rowH/2, mn=Math.min(...ds.map(d=>d[1])), mx=Math.max(...ds.map(d=>d[1]));
-    const el=ELIG[c](P), over=score>=ds[0][1];
-    const fill = el===false?"var(--band)":(over?"var(--band-ok)":"var(--band)");
-    const op = el===false?0.45:1;
-    s+=`<g opacity="${op}"><text x="${L-8}" y="${y+4}" font-size="12" fill="var(--text-primary)" text-anchor="end">${c}</text>`;
-    s+=`<rect x="${x(mn)-5}" y="${y-7}" width="${Math.max(10,x(mx)-x(mn)+10)}" height="14" rx="7" fill="${fill}"/>`;
-    ds.forEach(d=>{const t=`${c} ${d[0]}：${d[1]}`;
-      s+=`<circle cx="${x(d[1])}" cy="${y}" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2"/>`+
-         `<circle class="hit" cx="${x(d[1])}" cy="${y}" r="11" fill="transparent" data-t="${t}"/>`;});
-    const g=score-ds[0][1];
-    s+=`<text x="${x(mx)+12}" y="${y+4}" font-size="11" font-weight="600" fill="${g>=0?"var(--good)":"var(--text-muted)"}">${el===false?"🔒":(g>=0?"✓":g)}</text></g>`;
+  // 每条路线：要多少分（最近一次抽签的最低分）、你有多少、差多少
+  const routes=[
+    ["CEC 专场","CEC","每 2 周左右一次，最主要的路线",
+      p=>p.teer==2?"你的工作是 TEER 4/5，不算 CEC":(p.cwe<1?"先在加拿大合格工作满 1 年":null)],
+    ["医疗类","医疗","HCA 走这条",p=>p.hca?null:"先在 HCA 等医疗职业连续工作满 6 个月"],
+    ["法语类","法语","线最低，但要会法语",p=>p.fr>=7?null:"法语四项先考到 NCLC 7"],
+    ["省提名","省提名","拿到省提名直接 +600",p=>p.pnp?null:"先拿到省提名"],
+  ];
+  const lo=350, hi=560;
+  const pct=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
+  let h="";
+  routes.forEach(([name,key,sub,lock])=>{
+    const need=D[key][0][1], l=lock(P), gap=need-score;
+    const pass=!l&&gap<=0;
+    let status = l?`<span class="lk">🔒 ${l}</span>`:(pass?`<span class="ok">✅ 够了，高出 ${-gap} 分</span>`:`<span class="no">还差 <b>${gap}</b> 分</span>`);
+    let bar;
+    if(key=="省提名"){
+      bar=`<div class="route-note">最近一次线 ${need} 分，没有省提名基本到不了，有了一般就稳了</div>`;
+    } else {
+      const a=pct(Math.min(score,need)), b=pct(need), c=pct(score);
+      bar=`<div class="rbar${l?" locked":""}">
+        <div class="fill" style="width:${a}%"></div>
+        ${score<need?`<div class="gap" style="left:${a}%;width:${b-a}%"></div>`:`<div class="fill over" style="left:${b}%;width:${c-b}%"></div>`}
+        <div class="need" style="left:${b}%"><span>线 ${need}</span></div>
+      </div>`;
+    }
+    h+=`<div class="route"><div class="rhead"><b>${name}</b><span class="sub">${sub}</span></div>${bar}<div class="rstat">${status}</div></div>`;
   });
-  s+=`<g class="marker" style="transform:translateX(${x(score)}px)"><line x1="0" x2="0" y1="${top-6}" y2="${H-16}" stroke="var(--text-primary)" stroke-width="2"/>`+
-     `<rect x="-20" y="0" width="40" height="17" rx="4" fill="var(--text-primary)"/><text x="0" y="12.5" font-size="11.5" font-weight="700" fill="var(--surface-1)" text-anchor="middle">${score}</text></g>`;
-  s+=`</svg>`;
-  $("bands").innerHTML=s;
-  const tip=$("tip");
-  $("bands").querySelectorAll(".hit").forEach(h=>{
-    const show=e=>{const p=e.touches?e.touches[0]:e;tip.textContent=h.dataset.t;tip.style.opacity=1;tip.style.left=Math.min(innerWidth-160,p.clientX+10)+"px";tip.style.top=(p.clientY+12)+"px";};
-    h.addEventListener("mousemove",show);h.addEventListener("mouseleave",()=>tip.style.opacity=0);
-    h.addEventListener("touchstart",e=>{show(e);setTimeout(()=>tip.style.opacity=0,1800);},{passive:true});
-  });
+  // 补差距：CEC 差多少，哪些单一动作能补上
+  const cecNeed=D["CEC"][0][1], gap=cecNeed-score;
+  if(gap>0){
+    const acts=[["英语四项 CLB 10",{en:Math.max(P.en,10)}],["法语四项 NCLC 7",{fr:Math.max(P.fr,7)}],
+      ["加拿大经验再 +1 年",{cwe:Math.min(5,P.cwe+1)}],["加拿大经验再 +2 年",{cwe:Math.min(5,P.cwe+2)}],
+      ["兄弟姐妹是 PR",{sib:true}]];
+    const rows=acts.map(([n,o])=>[n,crs({...P,...o}).total-score]).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]);
+    h+=`<div class="fixgap"><div class="fg-title">CEC 还差 <b>${gap}</b> 分，哪个动作能补上？</div>`+
+      rows.map(([n,d])=>`<div class="fg-row"><span class="fg-n">${n}</span><div class="fg-bar"><div style="width:${Math.min(100,d/gap*100)}%" class="${d>=gap?"enough":""}"></div><i style="left:100%"></i></div><span class="fg-d">+${d} ${d>=gap?"✅":""}</span></div>`).join("")+
+      `<div class="fg-hint">竖线 = 需要补的 ${gap} 分；条超过竖线就够了。几项可以叠加。</div></div>`;
+  }
+  $("bands").innerHTML=h;
 }
 buildControls(); render();
-addEventListener("resize",()=>bands(crs(P).total));
+
 </script>
 </body>
 </html>
