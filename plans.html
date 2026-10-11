@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PR 三条路线 · 决策图</title>
+<title>PR 全部路径 · 决策页 v2</title>
 <style>
 .viz-root{
   color-scheme:light;
   --surface-0:#f4f3f0; --surface-1:#fcfcfb; --border:#e2e0da; --grid:#ebe9e4;
   --text-primary:#0b0b0b; --text-secondary:#52514e; --text-muted:#8a8882;
-  --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a;
+  --series-1:#2a78d6; --series-2:#eb6834; --series-3:#1baf7a; --series-4:#8e5bd6; --series-5:#6b7280; --series-6:#c9a227;
   --good:#008300; --bad:#c23b3a; --band:#dcdad4; --band-ok:#bfe3cf; --warn:#b7790a;
 }
 @media (prefers-color-scheme: dark){
@@ -17,7 +17,7 @@
     color-scheme:dark;
     --surface-0:#111110; --surface-1:#1a1a19; --border:#33322f; --grid:#2a2927;
     --text-primary:#f0efec; --text-secondary:#c3c2b7; --text-muted:#8f8d86;
-    --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70;
+    --series-1:#3987e5; --series-2:#d95926; --series-3:#199e70; --series-4:#a07ce6; --series-5:#9aa0ab; --series-6:#d9b43a;
     --good:#4cb84c; --bad:#e66767; --band:#3a3936; --band-ok:#1f4a33; --warn:#e0a53a;
   }
 }
@@ -28,22 +28,34 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto S
 .card{background:var(--surface-1);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:12px}
 h1{font-size:19px;margin:0 0 2px}
 .sub{font-size:12px;color:var(--text-muted)}
-.sub a{color:var(--series-1)}
+.sub a,.note a{color:var(--series-1)}
 .tag{display:inline-block;font-size:10.5px;padding:1px 6px;border-radius:999px;border:1px solid var(--border);color:var(--text-secondary);margin-left:4px;vertical-align:1px}
 .tag.f{color:var(--good);border-color:var(--good)} .tag.a{color:var(--warn);border-color:var(--warn)} .tag.g{color:var(--series-1);border-color:var(--series-1)}
+.flt{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.fb{flex:1 1 30%;min-width:100px;border:2px solid var(--border);border-radius:10px;padding:8px 6px;cursor:pointer;text-align:center;font-size:13.5px;font-weight:700;background:var(--surface-0);user-select:none}
+.fb.on{border-color:var(--good);color:var(--good)} .fb.off{border-color:var(--bad);color:var(--bad)}
+.fb small{display:block;font-weight:400;font-size:11px;color:var(--text-muted);margin-top:2px}
+.fsum{font-size:12.5px;margin-top:8px;padding:7px 8px;background:var(--surface-0);border-radius:8px}
+.fsum b{font-variant-numeric:tabular-nums}
 .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:900px){.plans{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:640px){.plans{grid-template-columns:1fr}}
-.plan{border:2px solid var(--border);border-radius:12px;padding:12px;background:var(--surface-1);cursor:pointer;position:relative;transition:border-color .2s}
+.plan{border:2px solid var(--border);border-radius:12px;padding:12px;background:var(--surface-1);cursor:pointer;position:relative;transition:border-color .2s,opacity .2s}
 .plan.on{border-color:var(--pc)}
+.plan.dim{opacity:.38;filter:grayscale(1)}
 .plan .nm{font-size:15px;font-weight:700;display:flex;align-items:center;gap:6px}
-.plan .nm i{width:10px;height:10px;border-radius:3px;background:var(--pc);display:inline-block}
-.plan .one{font-size:12px;color:var(--text-secondary);margin:2px 0 6px;min-height:34px}
+.plan .nm i{width:10px;height:10px;border-radius:3px;background:var(--pc);display:inline-block;flex:none}
+.plan .one{font-size:12px;color:var(--text-secondary);margin:2px 0 6px}
+.req{display:flex;gap:4px;flex-wrap:wrap;margin:0 0 6px}
+.req span{font-size:10.5px;border-radius:6px;padding:1px 6px;background:var(--surface-0);border:1px solid var(--border);color:var(--text-muted)}
+.req span.y{border-color:var(--warn);color:var(--warn)}
 .big{font-size:44px;font-weight:750;letter-spacing:-1.5px;line-height:1;font-variant-numeric:tabular-nums}
 .big small{font-size:13px;font-weight:600;color:var(--text-muted);letter-spacing:0;margin-left:4px}
 .ibar{position:relative;height:10px;background:var(--grid);border-radius:5px;margin:8px 0 3px}
 .ibar .rg{position:absolute;top:0;bottom:0;background:var(--pc);opacity:.35;border-radius:5px}
 .ibar .md{position:absolute;top:-3px;width:3px;height:16px;background:var(--pc);border-radius:2px;transform:translateX(-50%)}
 .ilab{font-size:11px;color:var(--text-muted);display:flex;justify-content:space-between}
+.rep{font-size:11.5px;color:var(--text-muted);margin-top:3px}
 .kv{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;font-size:12.5px;margin-top:8px}
 .kv b{font-variant-numeric:tabular-nums}
 .kv .k{color:var(--text-muted)}
@@ -56,8 +68,9 @@ h1{font-size:19px;margin:0 0 2px}
 .tl{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .tl svg{display:block;min-width:620px;width:100%}
 svg text{font-family:inherit}
-.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer;background:var(--surface-0);margin:0 6px 6px 0}
+.chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--border);border-radius:999px;padding:3px 10px;font-size:12.5px;cursor:pointer;background:var(--surface-0);margin:0 6px 6px 0;user-select:none}
 .chip.on{background:var(--text-primary);color:var(--surface-1);border-color:var(--text-primary)}
+.chip.dis{opacity:.35;cursor:not-allowed;text-decoration:line-through}
 .chip i{width:9px;height:9px;border-radius:2px;display:inline-block}
 .anyrow{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .anyrow .big{font-size:34px}
@@ -65,7 +78,7 @@ details{border-top:1px solid var(--grid);padding-top:8px;margin-top:8px}
 details summary{cursor:pointer;font-size:14px;font-weight:600;list-style:none;display:flex;align-items:center;gap:6px}
 details summary::before{content:"▸";color:var(--text-muted);font-size:12px}
 details[open] summary::before{content:"▾"}
-details summary i{width:10px;height:10px;border-radius:3px;display:inline-block}
+details summary i{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
 .stg{display:grid;grid-template-columns:1fr 54px;gap:4px 10px;align-items:center;padding:8px 0;border-bottom:1px dashed var(--grid)}
 .stg .t{font-size:12.5px}
 .stg .t small{display:block;color:var(--text-muted);font-size:11px;margin-top:1px}
@@ -79,7 +92,7 @@ details summary i{width:10px;height:10px;border-radius:3px;display:inline-block}
 .lst li{margin:3px 0}
 .lst b{color:var(--text-primary)}
 .lst .m{color:var(--text-secondary)}
-.dp{display:grid;grid-template-columns:62px 1fr;gap:3px 8px;font-size:12.5px;margin:4px 0}
+.dp{display:grid;grid-template-columns:72px 1fr;gap:3px 8px;font-size:12.5px;margin:4px 0}
 .dp b{font-variant-numeric:tabular-nums;color:var(--series-1)}
 .worst{font-size:12.5px;background:var(--surface-0);border-radius:8px;padding:8px;margin-top:6px}
 .worst b{color:var(--bad)}
@@ -91,15 +104,32 @@ details summary i{width:10px;height:10px;border-radius:3px;display:inline-block}
 .pre li{margin:4px 0;font-size:12.5px}
 .foot{font-size:11px;color:var(--text-muted);text-align:center;margin-top:6px}
 .note{font-size:11.5px;color:var(--text-muted);margin-top:6px}
+table.tb{width:100%;border-collapse:collapse;font-size:12px;margin-top:4px}
+.tb td,.tb th{border-bottom:1px solid var(--grid);padding:5px 4px;text-align:left;vertical-align:top}
+.tb th{color:var(--text-muted);font-weight:600;font-size:11px}
+.tb td:first-child{font-weight:600}
+.tb td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.st{font-size:10.5px;border-radius:6px;padding:0 5px;border:1px solid var(--border);color:var(--text-muted);white-space:nowrap}
+.st.x{color:var(--bad);border-color:var(--bad)} .st.b{color:var(--warn);border-color:var(--warn)} .st.w{color:var(--series-1);border-color:var(--series-1)}
 </style>
 </head>
 <body>
 <div class="viz-root"><div class="wrap">
 
 <div class="card">
-  <h1>PR 三条路线 · 决策图</h1>
-  <div class="sub">今天 2026-10-11 · PGWP 到期 2029-03-01 · 成功率 = <b>小蟹的主观估计</b>（可拖动调整），不是官方数据 · 分数来自 <a href="./">CRS 积分图</a> 的同一套公式 · 标签：<span class="tag f">事实</span><span class="tag a">假设</span><span class="tag g">推测</span></div>
-  <div class="plans" id="plans" style="margin-top:12px"></div>
+  <h1>通往 PR 的全部路径 · 决策页 v2</h1>
+  <div class="sub">2026-10-11 · PGWP 到期 <b>2029-03-01</b> · 本页所有概率是一次<b>零先验独立调研</b>的主观估计（不预设职业偏好，只看官方页面），<b>不是官方数据</b>；可拖滑块改 · 分数用 <a href="./">CRS 积分图</a> 同一套公式 · 标签：<span class="tag f">事实</span><span class="tag a">假设</span><span class="tag g">推测</span></div>
+</div>
+
+<div class="card">
+  <div class="sec">先回答三个问题（点一下切换）—— 不符合的路线会变灰</div>
+  <div class="flt" id="flt"></div>
+  <div class="fsum" id="fsum"></div>
+</div>
+
+<div class="card">
+  <div class="sec">六条可行路线（点卡片看细节；大数字 = 分步引擎结果，下方小字 = 调研报告的综合判断）</div>
+  <div class="plans" id="plans"></div>
 </div>
 
 <div class="card">
@@ -108,27 +138,34 @@ details summary i{width:10px;height:10px;border-radius:3px;display:inline-block}
 </div>
 
 <div class="card">
-  <div class="sec">并行跑几条？（共用的环节只算一次：英语 CLB 9、最后的身份衔接/获批）</div>
+  <div class="sec">组合：主线（1–4）同一时间只能执行一条，后台路线（5、6）可叠加 → 至少一条成功的概率</div>
   <div id="chips"></div>
-  <div class="anyrow"><span class="big" id="anyP">–</span><span class="ilab" id="anyI"></span><span class="note" id="anyN"></span></div>
+  <div class="anyrow"><span class="big" id="anyP">–</span><span class="ilab" id="anyI"></span></div>
+  <div class="note" id="anyN"></div>
+  <table class="tb" id="combos"></table>
+  <div class="note">方法：共用环节（英语 CLB 9、最后的 BOWP/获批）只算一次、精确枚举；IRCC/省级政策类环节（名单保留、分数线）用同一个随机因子驱动（一条收紧另一条也收紧）；同一路线内雇主相关环节按 0.7 正相关；其余按独立；区间 = 各环节三角分布 1,200 次抽样的 10–90% 分位。</div>
 </div>
 
 <div class="card" id="details"></div>
 
 <div class="card">
-  <div class="sec">关键前提 / 待确认（任一变了，上面的数都要重算）</div>
-  <ul class="pre" id="pre"></ul>
-  <div class="note">分数简化：页面按「四项同级」算。雅思 7/6.5/6.5/6 若为 G 类 ≈ CLB 7/8/8/7，官方按单项计分约 445（1 年）/458（2 年），比页面的 CLB 7 同级值（433/446）高 12 分；这不影响结论（都远低于 CEC 线）。</div>
+  <div class="sec">已否决 / 低概率 / 观察中的路线（调研全部看过的，一条不漏）</div>
+  <table class="tb" id="rej"></table>
 </div>
 
 <div class="card">
-  <details><summary>来源（官方为主，访问日期 2026-10-11）</summary><ol class="src" id="src"></ol></details>
+  <div class="sec">关键不确定 / 待确认（任一变了，上面的数都要重算）</div>
+  <ol class="pre" id="pre"></ol>
 </div>
-<div class="foot">仅供家庭讨论 · 不构成法律/移民建议 · 小蟹 🦀 · <a href="./" style="color:var(--text-muted)">← CRS 积分图</a></div>
+
+<div class="card">
+  <details><summary>来源（官方页面，均于 2026-10-11 访问）</summary><ol class="src" id="src"></ol></details>
+</div>
+<div class="foot">仅供家庭讨论 · 不构成法律/移民建议 · <a href="./" style="color:var(--text-muted)">← CRS 积分图</a></div>
 </div></div>
 
 <script>
-// ===== IRCC CRS 规则（与 crs-explorer.html 完全一致，逐字复用） =====
+// ===== IRCC CRS 规则（与 crs-explorer 完全一致，逐字复用） =====
 const EDU=[["高中",30,0],["1年",90,1],["2年",98,1],["本科",120,1],["双学历",128,2],["硕士",135,2],["博士",150,2]];
 function agePts(a){const s=[99,105,110,110,110,110,110,110,110,110,110,110,105,99,94,88,83,77,72,66,61,55,50,39,28,17,6];return a<18||a>44?0:s[a-18];}
 function l1(c){return c<4?0:c<=5?6:c==6?9:c==7?17:c==8?23:c==9?31:34;}
@@ -149,216 +186,334 @@ function crs(p){
   r.add=Math.min(600,r.aSib+r.aFr+r.aEdu+r.aPnp);
   r.total=r.core+r.transfer+r.add; return r;
 }
-// 档案：单身，硕士（RRU，≥1 学年 → 加拿大学历 +30），无海外经验，无兄弟姐妹分，无法语
-const B={age:26,en:9,fr:0,cwe:1,teer:1,edu:5,fwe:0,cdn:2,sib:false,hca:false,pnp:false};
+// 档案：26 岁单身，加拿大硕士（+30），无海外经验，无兄弟姐妹分，无法语；2028-04 满 2 年时 27 岁
+const B={age:26,en:9,fr:0,cwe:1,teer:1,edu:5,fwe:0,cdn:2,sib:false,pnp:false};
 const S=p=>crs({...B,...p}).total;
-// 2028 年初满 2 年经验时 27 岁（年龄分到 29 岁都是满分）
-const SC={a9:S({cwe:2,age:27}),a8:S({en:8,cwe:2,age:27}),a7:S({en:7,cwe:2,age:27}),
-  b9:S({fr:7,cwe:2,age:27}),b7:S({en:7,fr:7,cwe:2,age:27}),b9y1:S({fr:7}),
-  c9:S({cwe:2,age:27}),c10:S({en:10,cwe:2,age:27}),cs:S({cwe:2,age:27,sib:true}),c10s:S({en:10,cwe:2,age:27,sib:true}),c3:S({cwe:3,age:28}),y1:S({})};
+const SC={y1_9:S({}),y2_9:S({cwe:2,age:27}),y2_8:S({en:8,cwe:2,age:27}),y1_8:S({en:8}),y2_10:S({en:10,cwe:2,age:27}),y1_10:S({en:10}),
+  y2_9s:S({cwe:2,age:27,sib:true}),y2_10s:S({en:10,cwe:2,age:27,sib:true}),fr1:S({fr:7}),fr2:S({fr:7,cwe:2,age:27}),fr1_7:S({en:7,fr:7})};
 
-// ===== 抽签线（IRCC 官方 JSON，2026-10-01 止）=====
+// ===== 抽选线（IRCC 官方 JSON，2026-10-11 抓取）=====
 const CUT={
-  hc:{n:"医疗类",lo:467,hi:475,note:"2026 年 3 次：02-20 467 · 06-25 475 · 09-04 475（各 3500–4000 个 ITA）；2025 年 7 次 462–510"},
-  fr:{n:"法语类",lo:382,hi:420,note:"2026 年 8 次：382–420（每次 4000–8500 个 ITA）"},
-  cec:{n:"CEC",lo:507,hi:523,note:"2026 年：1–3 月 507–511，4–9 月 514–523"},
+  tr:{n:"Trades 类",lo:476,hi:477,rg:[380,560],note:"2026 两次：04-02 477（3,000）· 10-01 476（3,500）"},
+  hc:{n:"医疗类",lo:467,hi:475,rg:[380,560],note:"2026 三次：02-20 467 · 06-25 475 · 09-04 475（各 3,500–4,000）"},
+  rrs:{n:"RRS 抽选线",lo:51,hi:58,rg:[30,90],note:"AAIP RRS 2026 配额 1,057 已发 766；最低分 51（08-11、09-24）"},
+  cec:{n:"CEC",lo:507,hi:523,rg:[380,560],note:"2026：1–3 月 507–511，4–9 月 514–523，8–9 月单次只有 1,000–2,000；2025 年 10–12 月 515–534"},
+  fr:{n:"法语类",lo:382,hi:420,rg:[380,560],note:"2026 多次抽选 382–420，每次 4,000–8,500"}
 };
 
-// ===== 共用环节 =====
+// ===== 共用环节（整个组合里只算一次）=====
 const SH={
-  clb9:{n:"英语四项 ≥ CLB 9",by:"2027-06 前",lo:.5,c:.7,hi:.85,tag:"a",why:"现在约 CLB 7/8/8/7（若雅思为 G 类）。CELPIP 四项 9 = 写作、口语各升 2 级，备考约 8 个月"},
-  fin:{n:"身份衔接 + PR 获批",by:"ITA 后 6–8 个月",lo:.88,c:.93,hi:.97,tag:"f",why:"递交 PR 后可申 BOWP 续身份（事实）；EE 获批率高，但第一周工资单（40 vs 16.5 小时）等证据要干净（假设）"},
+  clb9:{n:"英语四项 ≥ CLB 9（CELPIP-G 或 IELTS GT，2 年内有效）",by:"2027-02 前",lo:.5,c:.65,hi:.8,tag:"a",why:"现有 7/6.5/6.5/6 若为 GT 约 CLB 7/8/8/7，若为 Academic 则 EE 完全不认；必须重考。CLB 9 = 听 8.0/读 7.0/写 7.0/说 7.0，听力最难"},
+  fin:{n:"AOR 后身份衔接（BOWP）+ PR 获批",by:"ITA 后 6–8 个月",lo:.88,c:.95,hi:.98,tag:"f",why:"凭 AOR 可申 BOWP，须在 PGWP 到期前递交（事实）；AIP/RCIP/AAIP 另有各自工签桥梁；材料干净则获批率高"}
 };
-// ===== 三条路线 =====
+
+// ===== 六条路线（内容全部来自 2026-10-11 零先验调研报告）=====
+// fam:"pol" = 政策类环节（跨路线同向相关）；fam:"emp" = 雇主类环节（同路线内正相关）；needs = 依赖的共用环节
 const PLANS=[
-{id:"A",name:"HCA 医疗线",col:"var(--series-1)",
- one:"CEC 满 1 年 → 2027-03 读 HCA（6 个月）→ 做 HCA 满 12 个月 → 医疗类抽签；拿到卫生局正式全职就走 BC PNP 卫生局通道（+600）",
- score:{v:SC.a9,lab:`CLB 9 + 2 年加拿大经验（厨师 1 年 + HCA 1 年）`,alt:`CLB 8 只有 ${SC.a8}，对 467–475 的线是五五开`,cut:"hc"},
- pr:"2029-06 ～ 2029-10",prTag:"g",
- hard:"HCA 12 个月要在 2028-11 左右才满，离 PGWP 到期只剩 3–4 个月；中间任何一步晚 2 个月，就要靠 BC PNP 或 BOWP 兜底",
+{id:"1",name:"屠夫 → EE Trades 类别",col:"var(--series-1)",main:1,req:{job:1},rep:[30,15,50],
+ one:"转岗零售/批发屠夫（NOC 63201，与厨房的肉类分割、备料相邻）。2026 Trades 名单含屠夫、不含厨师；线 476–477，你 2 年经验 + CLB 9 = 502，1 年 + CLB 9 = 489 也够。不搬家、不读书。",
+ score:{v:SC.y2_9,lab:`CLB 9 + 2 年加拿大经验（2028-04）；1 年时 ${SC.y1_9}`,alt:`CLB 8 → ${SC.y2_8}，不够`,cut:"tr"},
+ pre:"愿意换工种（屠夫 $20–26/h，时薪可能略降）· 费用约 $2.5–3.5k：语言考试 $300–350 × 2–3 次、EE 申请费约 $1,525、生物识别 $85、体检约 $250、无犯罪证明、BOWP 约 $255",
+ hard:"两个单点风险：听力 8.0（CLB 9）考不出；IRCC 每年 2 月修订类别名单，屠夫可能被移出",rho:.7,
  stages:[
   {ref:"clb9"},
-  {n:"读完 HCA（Drake Medox 26 周，工签内不办学签）",by:"2027-03 → 2027-09",lo:.85,c:.92,hi:.97,tag:"f",why:"课程在 BC Care Aide Registry 名单上（Full Recognition，事实）；26 周 ≈ 6 个月，要向 IRCC/学校确认「≤6 个月」怎么算（待确认）；实习 7.2 周全职，期间 CEC 工时暂停（事实）"},
-  {n:"毕业 2 个月内找到 HCA 工作，且 ≥30 小时/周",by:"2027-11 前",lo:.65,c:.8,hi:.9,tag:"a",why:"BC 约 3.9 万名 HCA，新人多从 casual 起步但「越来越多直接拿正式岗」（WorkBC）；casual 班够不够 30 小时/周是最大变量"},
-  {n:"累计 12 个月 HCA 全职经验（≈1560 小时）",by:"2028-12 前",lo:.65,c:.8,hi:.9,tag:"a",why:"类别抽签要求 3 年内同一职业满 12 个月全职或等量兼职（事实）；班次不稳、换雇主、生病都会拖后"},
-  {n:"2029-01 前拿到 ITA（两条任一即可）",alt:[
-    {n:"医疗类抽签：线 ≤ 你的分（502）且在到期前开一次",lo:.55,c:.7,hi:.85,tag:"g",why:"2026 年线 467–475，分数够；但一年只抽 3 次，满 12 个月后可能要等 1–4 个月；33102 是否留在 2027 年名单未知"},
-    {n:"BC PNP 卫生局通道（Health Authority stream）提名",lo:.2,c:.35,hi:.5,tag:"a",why:"要卫生局（Fraser/VCH/Providence 等）正式、无限期、全职岗 + 雇主签字；无需抽签、无 2 年经验要求，审理约 3 个月；新人拿正式全职线通常要先 casual 几个月到一年"}]},
+  {n:"2027-Q1 前找到屠夫岗位并入职",by:"2027-04 前",lo:.55,c:.7,hi:.82,tag:"a",fam:"emp",why:"大温超市肉部、肉铺、批发肉商长期招人；时薪可能略降"},
+  {n:"做满 12 个月，雇主出合格职责信（按 NOC 63201 主要职责写）",by:"2028-04/05",lo:.8,c:.9,hi:.95,tag:"a",fam:"emp",why:"类别要求过去 3 年内同一职业 12 个月全职（或等量兼职）"},
+  {n:"2027/2028 年 Trades 名单仍含 63201",by:"每年 2 月公布",lo:.4,c:.6,hi:.75,tag:"g",fam:"pol",why:"屠夫同时在 ESDC 低薪 LMIA 优先职业名单，短缺有政策共识，但不保证"},
+  {n:"届时 Trades 分数线 ≤ 你的分（502）",by:"2028-05 → 2028-12",lo:.7,c:.85,hi:.93,tag:"g",fam:"pol",why:"2026 线 476–477；节奏约 4 月、10 月各一次；若只有 CLB 8 → 470 不够"},
   {ref:"fin"}],
- diff:[
-  ["时间太紧（12 个月 HCA ≈ 2028-11 满）","CEC 满 1560 小时后最近一期入学（3 月下旬或 4 月，Drake Medox 每月开班），不要再拖；毕业当月就注册 Registry（公立岗必须）、同时投卫生局 + 私立长照；casual 多接班，尽快到 30 小时/周"],
-  ["新人常是 casual，拿不到正式全职 → BC PNP 卫生局通道走不了","先进卫生局 casual 刷内部招聘；郊区/Area 3 更容易拿正式线且 BC PNP 多 15 分；私立长照正式全职走 Skilled Worker 要 2 年经验，暂时不够"],
-  ["英语不到 CLB 9：CLB 8 只有 470，对 467–475 的线是赌","2027-02 先考一次 CELPIP，不够 5 月再考；CLB 8 也先入池，同时把 BC PNP 当主线"],
-  ["医疗类名单每年重定，33102 可能被移出","IRCC 每年 2 月左右公布（2026 年是 02-18）；若移出，HCA 经验仍算 CEC，且 BC PNP 通道不受影响"],
-  ["读书 6 个月没收入、学费约 $10,500","Combined Delivery 每周只有 1 天面授，可继续打工（工时不算 CEC，但有收入）"]],
- dec:[["2027-02","CELPIP 出分：四项 9 → 按计划；8 → 继续，但把 BC PNP 卫生局通道当主线；≤7 → 转法语线（B）"],
-      ["2027-03","工时表核到 1560 小时（含第一周争议）→ 开 EE 档案入池（489 分，先占位）"],
-      ["2027-12","毕业 3 个月还没 ≥30 小时/周的 HCA 工作 → 回餐厅攒 CEC，同时考虑搬去 Area 3 的卫生局"],
-      ["2028-06","拿到卫生局正式全职 → 立刻递 BC PNP（不用等 12 个月）"],
-      ["2028-12","12 个月已满但没抽签 → 确认 BC PNP 进度；准备 HCA 雇主 LMIA（长照机构不受大温低薪拒收限制）兜底"]],
- worst:"到 2029-01 没 ITA、没提名：PGWP 2029-03-01 到期。兜底顺序：雇主 LMIA 工签（HCA 在 NAICS 623 长照，可受理；厨师在大温低薪岗基本不受理）→ 旅游身份等线 → 离境。代价：半年学费 + 半年无 CEC 收入。"},
-{id:"B",name:"法语线",col:"var(--series-2)",
- one:"继续当厨师攒 CEC，同时从零学法语到 NCLC 7（TEF Canada 四项 B2）→ 法语类抽签（线 382–420）。不换工作、不读书",
- score:{v:SC.b7,lab:`现有英语 CLB 7 + 法语 NCLC 7 + 2 年经验（CLB 9 则 ${SC.b9}）`,alt:`满 1 年 + CLB 9 + 法语就有 ${SC.b9y1}`,cut:"fr"},
- pr:"2028-12 ～ 2029-06",prTag:"g",
- hard:"从零到四项 B2，Alliance Française 温哥华的课时表是约 590–720 课时；边做 30 小时/周的工边学，18 个月内达标是硬仗",
+ tl:[["2026-10→12","报考 CELPIP/IELTS GT，目标四项 CLB 9；同时投肉部/肉铺岗位，谈妥 2027-03 后入职（或更早：CEC 的 1 年可由厨师 + 屠夫拼凑）"],["2027-03 下旬","厨师满 1,560 h → 立即建 EE 档案（CEC，489）"],["2027-04","转入屠夫岗位（尽量 30 h/周）"],["2028-04/05","屠夫满 12 个月、总经验满 2 年 → 更新档案 502，等 Trades 抽选"],["2028-05→12","ITA → 60 天内递交 → AOR"],["2029-01/02","凭 AOR 申 BOWP（须在 PGWP 到期前递交）"],["2029 下半年","PR 获批（EE 目标处理期 6 个月）"]],
+ diff:[["听力 8.0 是 CLB 9 最难项","2026-11 先考一次定位，差哪项补哪项，预留 2–3 次；CELPIP 与 IELTS GT 都可"],["名单每年 2 月修订，屠夫可能被移出","2027-02 看名单：仍在 → 继续；移出 → 立即放弃，屠夫经验仍算 CEC"],["Trades 一年只抽约 2 次","2028-04 前务必满 12 个月，否则可能错过 2028 年的两次"],["雇主职责信与 NOC 不符","入职时就确认岗位名称、职责与 63201 主要职责一致"],["时薪可能从 $24 降到 $20–26","CEC 的 1 年经验不要求同一职业，提前转岗不浪费"]],
+ dec:[["2027-02","语言出分：听力到 8.0 → 按计划；到不了 → 本路线降级，转路线 2/3"],["2027-02","IRCC 公布 2027 类别名单：屠夫被移除 → 立即放弃"],["2028-04","满 12 个月，更新档案；若 4 月那次已过，等 10 月"]],
+ worst:"2027-02 名单移除屠夫或听力卡在 7.5：损失语言考试费和转岗工资差；屠夫经验仍计入 CEC（路线 5 不受影响），但 PGWP 到期前没有其他身份桥梁。",
+ src:[1,0,3,4]},
+{id:"2",name:"HCA → BC PNP Care + EE 医疗（双轨）",col:"var(--series-2)",main:1,req:{job:1,study:1},rep:[40,25,60],
+ one:"读 6–8 个月护理助理（HCA）课程 → 注册 BC Care Aide Registry → 做 33102（$28–32/h）。BC PNP 2026 几乎只给 Care/Build/高收入发邀请，Care: Health 最低 76–108 分；EE 医疗类别线 467–475。两条线命中任一即可。不搬家。",
+ score:{v:SC.y1_9,lab:`CLB 9 + 1 年（2027-03）；2028-04 满 2 年 ${SC.y2_9}`,alt:`CLB 8 → ${SC.y1_8}/${SC.y2_8}，对 467–475 是五五开；BC PNP 另有自己的 76–108 分制`,cut:"hc"},
+ pre:"愿意转行 + 再读书 · 学费 $8k–15k + 读书期间收入下降；BC PNP 申请费 $1,475；EE 费用约 $2k；合计 $12k–20k",
+ hard:"资金与约 8 个月时间；BC PNP Skilled Worker 流要求 2 年全职等效经验（2027-11 只有约 1.7 年），Care 定向邀请是否豁免待确认",
  stages:[
-  {n:"英语成绩有效且 ≥ CLB 7（CEC 和 +50 法语加分的门槛）",by:"ITA 时",lo:.9,c:.95,hi:.99,tag:"f",why:"门槛只要 CLB 5–7（事实）；雅思需是 G 类且 2 年内有效，否则补考 CELPIP（待确认）"},
-  {n:"CEC 满 1 年、开 EE 档案",by:"2027-04",lo:.9,c:.95,hi:.98,tag:"f",why:"按 30 小时/周约 2027-03-15 满（事实）；全职读书会暂停，本线不读书"},
-  {n:"法语四项 NCLC 7（TEF Canada B2）",by:"2028-09 前",lo:.2,c:.33,hi:.5,tag:"a",why:"AF 温哥华：A1 90–110h、A2 140–160h、B1 160–200h、B2 200–250h，累计约 590–720 课时；每周 8–10 小时要 15–20 个月；口语、写作最难"},
-  {n:"法语类继续开抽且线 ≤ 你的分",by:"2028-09 → 2028-12",lo:.8,c:.9,hi:.97,tag:"g",why:"2026 年 8 次，线 382–420，每次 4000–8500 人；联邦有法语移民配额目标，政策稳定度高；你 508–564 远高于线"},
+  {n:"录取、完成 HCA 课程 + 实习、通过 Registry 注册",by:"2027-01 → 2027-10",lo:.65,c:.8,hi:.9,tag:"a",why:"课程门槛低；≤6 个月课程不需学签，更长则 PGWP 持有者可申学签；资金与时间是主要障碍"},
+  {n:"找到 33102 全职岗位（长期护理/社区护理）",by:"2027-10",lo:.8,c:.9,hi:.95,tag:"a",why:"HCA 在 BC 极度短缺，雇主多，公立体系（Health Authority 流）亦可"},
+  {n:"2028 年拿到 ITA（任一即可）",alt:[
+    {n:"BC PNP Care: Health 邀请分 ≤ 你的分 → 提名 +600",lo:.5,c:.65,hi:.78,tag:"g",fam:"pol",rho:.5,why:"你的分靠硕士、语言、$30 左右时薪，大温无地区加分；2026 最低分 76–108 波动大，9–10 月为 76"},
+    {n:"EE 医疗类别 2028 仍含 33102 且线 ≤ 489–502（需 CLB 9）",lo:.5,c:.65,hi:.78,tag:"g",fam:"pol",needs:["clb9"],why:"HCA 满 12 个月约 2028-10，只剩 2028-11 → 2029-02 的抽选窗口"}]},
+  {n:"整条线在 2029-03 前走完（AOR）",by:"2029-02 前",lo:.75,c:.85,hi:.92,tag:"a",why:"BC PNP 线：邀请 → 30 天申请 → 约 3 个月提名 → 两周一次 PNP 抽选 → AOR 约 2028-08"},
   {ref:"fin"}],
- diff:[
-  ["学习量：约 600–700 课时才到 B2","2026-11 就开始；AF 晚班 4h/周 + 自学 6h/周；每 3 个月做一次 TEF 模考，达不到 B1 就加课"],
-  ["口语/写作单项卡在 B1","B2 是四项都要；提前 6 个月专攻口语写作，报 TEF 专项班；考 3 次（2028-03 / 06 / 09）"],
-  ["和 HCA 线抢时间","二选一：读 HCA 的 6 个月里法语只保温；或先法语后 HCA（PR 后读 HCA 是本地学费）"],
-  ["雅思若是 A 类或已过期，没有有效英语成绩","2027 年初补一次 CELPIP（反正 A 线也要考）"]],
- dec:[["2027-05","6 个月学完没到 A2 → 学法语的效率不够，降为备用，主攻 A 线"],
-      ["2028-03","第一次 TEF：四项 B2 → 立刻更新 EE 档案等抽；差 1 项 → 6 月重考"],
-      ["2028-09","第三次 TEF 仍不到 → 本线放弃，全力 A/C"]],
- worst:"学了 18 个月没到 B2：损失约 $3,000–5,000 学费和大量时间，但 CEC 经验照常累计，不影响 A/C 线。"},
-{id:"C",name:"纯 CEC 厨师线",col:"var(--series-3)",
- one:"只当厨师攒经验 + 英语冲高分，等 CEC 抽签。满 2 年（2028-03）502 分 vs 线 507–523；要靠 CLB 10（+12）、兄弟姐妹回加拿大住（+15）或线回落",
- score:{v:SC.c9,lab:"CLB 9 + 2 年（2028-03）",alt:`CLB 10 → ${SC.c10}；兄弟姐妹回加 → ${SC.cs}；两样都有 → ${SC.c10s}；满 3 年要到 2029-03（PGWP 当天到期）才有 ${SC.c3}`,cut:"cec"},
- pr:"2028-10 ～ 2029-07",prTag:"g",
- hard:"502 分低于 2026 年全部 CEC 线（507–523）；本线成功与否取决于你控制不了的事：线回落、或家人搬回加拿大",
+ tl:[["2026-11→2027-01","语言考试；报名 BC 认可 HCA 项目（公立 6–8 个月，私立较贵）"],["2027-03","厨师满 1,560 h → 建 EE 档案（CEC，489）"],["2027-01→09","HCA 课程 + 实习（厨师兼职维持收入）"],["2027-10","注册 Registry；入职长期护理/社区护理"],["2027-11","BC PNP 注册 Care: Health（确认 2 年经验要求是否豁免；健康局雇主则走 Health Authority 流）"],["2028-02→06","定向邀请 → 30 天申请 → 约 3 个月提名 → EE +600 → PNP 抽选 → ITA → AOR（约 2028-08）"],["2028-10","并行：HCA 满 12 个月 → 医疗类别合格（502）→ 2028-11→2029-02 抽选"],["2029-01","AOR 后申 BOWP"]],
+ diff:[["学费 $8k–15k + 读书期间收入下降","2026-12 前确认资金；选公立项目；厨师兼职维持收入"],["Skilled Worker 流要 2 年全职等效经验，2027-11 只有约 1.7 年","问 BC PNP：Care 定向邀请是否豁免；拿到健康局雇主则走 Health Authority 流（无 2 年硬性要求）"],["Care: Health 分数线 76–108 波动","2027-10 注册后看当期线；时薪、语言分尽量拉高"],["33102 可能被移出 2027/2028 医疗名单","2027-02 看名单；移出则只剩 BC PNP 一轨，HCA 经验仍算 CEC"],["课程超过 6 个月要学签","优先 ≤6 个月课程；否则以 PGWP 持有者身份申学签"]],
+ dec:[["2026-12","确认资金与意愿，否则放弃本路线"],["2027-02","IRCC 2027 医疗名单是否仍含 33102"],["2027-10","注册后看 BC PNP 当期 Care 分数线：远高于你 → 把 EE 医疗类别当主轨"]],
+ worst:"读完 HCA 没拿到邀请、也没被抽中：损失 $12k–20k 与约 8 个月；HCA 经验仍计入 CEC；PGWP 到期前没有其他身份桥梁，只能靠路线 5/6。",
+ src:[1,0,6,7,8]},
+{id:"3",name:"阿省 Rural Renewal Stream（AAIP RRS）",col:"var(--series-3)",main:1,req:{move:1},rep:[35,18,55],
+ one:"厨师身份不变，搬到阿省 AAIP 指定乡村社区工作。RRS 接受任何有效工签（含 PGWP）、厨师不在排除表、TEER 3 只要 CLB 5；EOI 你约 69–73 分 vs 抽选线 51–58；提名后 EE +600。不换工种、不读书。",
+ score:{v:69,lab:"EOI 估分：硕士 10 + 非阿省加拿大学历 6 + 语言 CLB 6+ 10 + 经验 11 + 加拿大经验 6 + 年龄 5 + 永久全职 offer 10 + 背书 6 + 乡村 5",alt:"阿省工作 6 个月后约 73",cut:"rrs"},
+ pre:"愿意离开大温搬到阿省乡村（Brooks、Lacombe、Drumheller、Whitecourt 等，以 AAIP 指定社区列表为准）· 费用约 $6–8k：搬家 $2–4k + AAIP $1,500 + EE 约 $2k + 语言考试",
+ hard:"两个前提：社区 Endorsement 信（2026 起各社区有名额上限、按 TEER 分配）；12 个月每周 ≥30 h（你目前平均 28.5 h，BC 经验可能不被认定，需在阿省补足）",rho:.7,
+ stages:[
+  {n:"在指定社区找到全职厨师工作并搬迁",by:"2027-04",lo:.55,c:.7,hi:.82,tag:"a",fam:"emp",why:"远程投递指定社区餐馆/酒店；PGWP 全国有效"},
+  {n:"获得社区 Endorsement 信",by:"2027-04 → 10",lo:.45,c:.6,hi:.72,tag:"g",fam:"emp",why:"2026 新增名额上限是最大不确定项；TEER 3 比 TEER 4–5 有利；信有效期 1 年"},
+  {n:"累计 12 个月每周 ≥30 h（申请前 18 个月内）",by:"2028-04 前",lo:.75,c:.85,hi:.92,tag:"a",fam:"emp",why:"BC 的 28.5 h/周可能不被认定；到阿省按 30 h+ 排班"},
+  {n:"EOI 抽中（69–73 vs 51–58）且提名获批",by:"2027-10 → 2028-04",lo:.75,c:.85,hi:.93,tag:"g",why:"RRS 约 2 个月处理；2026 配额已用 766/1,057，2027 配额待公布"},
+  {n:"提名 → EE +600 → PNP 抽选 → AOR，赶在 2029-03 前",by:"2028-04 → 08",lo:.7,c:.8,hi:.9,tag:"a",why:"PNP 抽选两周一次（线 697–805 含 600）；或凭提名申请省提名工签延期"},
+  {ref:"fin"}],
+ tl:[["2026-11→2027-02","语言考试（CLB 6+ 即拿满 EOI 语言分）；研究 AAIP 指定社区名单与各社区 EDO 的背书流程；远程投递"],["2027-03","厨师满 1,560 h（BC 经验计入 RRS 12 个月要求，但须每周 ≥30 h）"],["2027-04","搬阿省入职；提交 Worker EOI（约 69 分，阿省工作 6 个月后 73）"],["2027-04→10","争取社区 Endorsement"],["2027-10 起","AAIP ITA → 提交申请（$1,500）→ 提名（约 2 个月）"],["2028-04→08","提名 → EE +600 → 两周内 PNP 抽选 ITA → AOR"],["2029-01","BOWP，或凭提名申请省提名工签延期"]],
+ diff:[["28.5 h/周可能不被认定为全职","到阿省后排班 ≥30 h/周重新累计 12 个月；同时向 AAIP 确认 BC 经验的认定"],["社区名额上限、按 TEER 分配","2026-12 起同时联系多个社区的 EDO，问清 2027 名额与排队规则"],["阿省 T&H 流和 Alberta Opportunity Stream 都要 LMIA 工签","只走 RRS，别被雇主引导去 T&H"],["AAIP 2027 配额未知","2027-02 核对；若 2027-06 前拿不到 Endorsement 意向，转路线 4"],["乡村生活与收入","选有餐饮/旅游业的社区，厨师需求稳定"]],
+ dec:[["2026-12","决定是否接受搬迁"],["2027-02","核对 AAIP 2027 配额与 RRS 社区名额"],["2027-06","没有 Endorsement 意向 → 转路线 4（AIP/RCIP）"]],
+ worst:"搬去后拿不到背书或配额用完：损失搬家费与大温人脉；厨师经验仍算 CEC（路线 5 照跑）；阿省低失业率地区的低薪 LMIA 可能作为身份兜底。",
+ src:[9,10,11,12]},
+{id:"4",name:"AIP（大西洋四省）或 BC RCIP 社区",col:"var(--series-4)",main:1,req:{move:1},rep:[30,15,50],
+ one:"不看 CRS 的联邦项目：指定雇主 offer + 省/社区背书 → 直接递 PR，自带工签桥梁。厨师 TEER 3 合格，2027-03 满 1,560 h 即可。AIP 优先 NB/PEI/NL；RCIP 可留在 BC（West Kootenay、North Okanagan-Shuswap、Peace Liard）但分数制（91–94）、名额小，报告估 25%。",
+ score:null,
+ pre:"愿意搬迁（大西洋省份或 BC 乡村）· 语言 CLB 5 即可（建议考高以兼容 EE）· 费用：搬家 $3–5k + PR 申请费约 $1,525（RCIP 社区可能收费，未核实）",
+ hard:"必须是指定雇主 + 省/社区名额；NS 2026 对非优先职业只考虑 TEER 0–2；RCIP 厨师是否在优先职业名单、评分表均未能核实",
+ stages:[
+  {n:"找到指定雇主并拿到 offer",by:"2027-04",lo:.45,c:.6,hi:.72,tag:"a",why:"四省餐饮业指定雇主多；RCIP：West Kootenay 330 家指定雇主（新雇主已不能加入）"},
+  {n:"省 endorsement / 社区推荐",by:"2027-07 → 09",lo:.5,c:.65,hi:.78,tag:"g",why:"看各省名额与优先级；RCIP 分数制（WK 93、NOS 91–94），“已在社区工作”是关键加分"},
+  {n:"在 2029-03 前完成（递交 + 审理 6–12 个月）",by:"2028 上半年",lo:.82,c:.9,hi:.95,tag:"a",why:"所有路线中最早落地；即使延误，endorsement 后可申 AIP/RCIP 工签桥梁"},
+  {ref:"fin"}],
+ tl:[["2026-11→2027-03","语言考试；联系四省指定雇主名单上的餐饮企业（优先 NB/PEI/NL）；或联系 BC 三个 RCIP 社区"],["2027-04","拿 offer → 定居计划 → 雇主申请 endorsement（1–3 个月）"],["2027-07→09","endorsement → 递 PR + 同步申 AIP 工签（必要时）"],["2028 上半年","PR 获批（经验上 6–12 个月）"],["RCIP 变体","先搬去社区做厨师 6–12 个月再申请社区推荐更稳"]],
+ diff:[["NS 2026 优先级把非优先职业限制在 TEER 0–2","优先 NB/PEI/NL；NS 的 NSNP 规则是否同样适用于 AIP 待确认"],["RCIP 分数制、名额小、竞争者多为已在当地工作者","先搬去当地做厨师 6–12 个月再申请；逐一向社区确认厨师是否在优先职业名单"],["必须是“指定雇主”","只投官方指定雇主名单；West Kootenay 新雇主已不能加入"],["PEI 站点反爬、各省名额未核实","直接邮件/电话问省移民办公室"]],
+ dec:[["2027-01","是否已有指定雇主回应；没有 → 精力转回路线 3 或 1/2"],["2027-04","拿到 offer → 立即做定居计划、申请 endorsement"],["2027-09","没拿到 endorsement → 评估 RCIP 变体或回大温"]],
+ worst:"找不到指定雇主或名额用完：损失搬家费与时间；经验仍算 CEC；若已获 endorsement 则有 AIP 工签桥梁，PR 审理拖过 2029-03 也不失身份。",
+ src:[13,14,15,16,17]},
+{id:"5",name:"CEC 普通抽选（留在现岗位）",col:"var(--series-5)",main:0,req:{},rep:[20,8,35],
+ one:"什么都不改：继续做厨师攒经验、英语冲 CLB 9/10，等 CEC 抽选。2028-04 满 2 年 502（CLB 9）/ 514（CLB 10）；兄弟姐妹回加定居 +15。2026 线 507–523，下半年规模缩到 1,000–3,000 且上行。零成本，主动权最小。",
+ score:{v:SC.y2_9,lab:"CLB 9 + 2 年（2028-04）",alt:`CLB 10 → ${SC.y2_10}；兄弟姐妹回加 → ${SC.y2_9s}；两样都有 → ${SC.y2_10s}；3 年经验在 PGWP 内攒不满`,cut:"cec"},
+ pre:"零成本、零搬迁、零转行，只需语言考试费",
+ hard:"502 低于 2026 全部 CEC 线；成败取决于你控制不了的事：线回落、CLB 10、或兄弟姐妹回加",
  stages:[
   {ref:"clb9"},
-  {n:"分数够线：2028-03 → 2029-01 之间至少有一次 CEC 线 ≤ 你的分",by:"2029-01 前",lo:.12,c:.24,hi:.4,tag:"g",why:"算法：P(有加分)×P(线≤514–517) + P(无加分)×P(线≤502)。加分 = CLB 10（约 20%）或 兄弟姐妹回加拿大住（约 25%，家庭决定）→ 任一 ≈ 40%；2026 年 1–3 月线 507–511、4–9 月 514–523，所以 P(线≤514–517) ≈ 45%，P(线≤502) ≈ 10%"},
+  {n:"分数够线：2028-04 → 2029-02 约 20 次 CEC 抽选中至少一次线 ≤ 你的分",tag:"g",fam:"pol",
+   mix:{bonus:[{n:"再冲到 CLB 10（听 8.5/读 8.0/写 7.5/说 7.5）→ 514",lo:.25,c:.38,hi:.5,tag:"a",why:"报告：CLB 10 四项约 0.25（无条件）；已到 CLB 9 的条件下约 0.38"},
+               {n:"兄弟姐妹 2028 年前回加定居（+15）",lo:.1,c:.25,hi:.4,tag:"g",why:"家庭决定；IRCC 对继兄弟姐妹是否计分未核实"}],
+        lo:{n:"无加分（502）时线 ≤ 分",lo:.08,c:.15,hi:.25,tag:"g",why:"2028 中位预期 510–525"},
+        hi:{n:"有加分（514–529）时线 ≤ 分",lo:.4,c:.55,hi:.75,tag:"g",why:"514 约 0.45、529 约 0.80，按加分组合加权"}}},
   {ref:"fin"}],
- diff:[
-  ["分数天花板：2 年经验 + CLB 9 = 502，差 5–21 分","唯一自己能做的是 CLB 10（CELPIP 四项 10）；考 2–3 次"],
-  ["+15 不由你决定","和兄弟姐妹聊清楚：若 2028 年内回加拿大定居，ITA 前要准备居住证明 + 关系链材料"],
-  ["满 3 年（513）要到 2029-03-02，PGWP 当天已过期","3 年这一档实际用不上，除非先拿到别的身份"],
-  ["等线 = 赌政策（你自己说过不想赌）","所以本线只能当 A/B 的背景层：不花钱、不花时间，自动跑着"]],
- dec:[["2027-03","入池 489 分；此后每次 CEC 抽签看线"],
-      ["2028-03","满 2 年 → 502；若 CLB 10 或 +15 到手 → 514/517，开始有真实机会"],
-      ["2029-01","仍无 ITA → 本线结束，看 A/B 的进度"]],
- worst:"到 2029-01 没抽中：除了考试费几乎零成本，但如果 A/B 也没推进，就是 PGWP 到期没身份。厨师 LMIA 在大温低薪岗（失业率 ≥6% 时）不受理。"}
+ tl:[["2026-11→2027-02","反复考语言冲 CLB 10"],["2027-03","入池（CLB 9 489 / CLB 10 501）"],["2028-04","满 2 年（502 / 514）；兄弟姐妹回加 +15 → 517 / 529"],["2028-04→2029-02","约 20 次 CEC 抽选，等线"],["2029-01","AOR 后申 BOWP"]],
+ diff:[["分数天花板 502，差线 5–21 分","唯一自己能做的是 CLB 10，考 2–3 次"],["+15 不由你决定","和兄弟姐妹聊清楚；若回加，ITA 前准备居住证明与关系材料；先确认继兄弟姐妹是否计分"],["抽选规模缩小、线上行","本路线只能当背景层：不花钱、不花时间，自动跑着"],["3 年经验（更高分）在 PGWP 内攒不满","每周 30 h 也要到 2029-03 中旬，不要指望"]],
+ dec:[["2027-03","入池 489；此后每次抽选看线"],["2028-04","满 2 年 → 502；CLB 10 或 +15 到手 → 514/517，才有真实机会"],["2029-01","仍无 ITA → 本路线结束"]],
+ worst:"到 2029-01 没抽中：除考试费几乎零成本；但若其他路线也没推进，就是 PGWP 到期没身份——大温厨师低薪 LMIA 基本不受理。",
+ src:[0,2,3,4,18]},
+{id:"6",name:"法语零基础 → NCLC 7 → 法语类别",col:"var(--series-6)",main:0,req:{},rep:[20,8,35],
+ one:"继续当厨师，同时从零学法语到 TEF/TCF Canada 四项 B2（NCLC 7）。法语类别 2026 线仅 382–420、单次 4,000–8,500 个邀请，是最宽松的类别；你 CLB 9 + NCLC 7 ≈ 551，英语只有 CLB 7 也远超线。不换工种、不搬家、不需学签。",
+ score:{v:SC.fr1,lab:`CLB 9 + NCLC 7 + 1 年（2027-03）；2 年 ${SC.fr2}`,alt:`英语只有 CLB 7 时 ${SC.fr1_7}，仍远超 382–420`,cut:"fr"},
+ pre:"学习投入：600–1,000 学时、约 18–24 个月高强度学习 · 费用 $2–6k 课程 + 考试 $450",
+ hard:"成人、全职工作、无法语环境下，18–24 个月到四项 B2 是硬仗；与路线 2 的读书时间冲突",
+ stages:[
+  {n:"英语成绩有效且 ≥ CLB 7（CEC 门槛与 +50 法语奖励的前提）",by:"ITA 时",lo:.88,c:.95,hi:.99,tag:"f",why:"只需 CLB 5–7；若现有雅思为 Academic 或过期，补考 CELPIP/IELTS GT"},
+  {n:"2028-10 前四项 NCLC 7（TEF/TCF Canada B2）",by:"2028-10",lo:.2,c:.3,hi:.4,tag:"a",why:"零基础通常 600–1,000 学时；报告估 0.25–0.35"},
+  {n:"2029-02 前被法语类别抽中",by:"2028-11 → 2029-02",lo:.85,c:.92,hi:.97,tag:"g",why:"线 382–420、规模最大、政策最稳；你 551 远高于线"},
+  {ref:"fin"}],
+ tl:[["2026-11","开始学法语（课程 + 自学）"],["2027-03","厨师满 1,560 h → 建 EE 档案"],["2028-03/06/09","TEF/TCF 考 2–3 次"],["2028-10→2029-02","四项 B2 → 更新档案 → 法语抽选 → AOR"],["2029-01","BOWP"]],
+ diff:[["600–1,000 学时才到 B2","2026-11 就开始；每周 8–10 小时；每 3 个月模考，不到 B1 就加课"],["口语/写作单项卡 B1","四项都要 B2；提前 6 个月专攻口语写作；预留 3 次考试"],["与路线 2 读 HCA 抢时间","二选一或分期：读 HCA 的半年法语只保温"],["政策面","法语类别相对稳定，与其他路线几乎不相关，是最好的对冲"]],
+ dec:[["2027-05","6 个月没到 A2 → 效率不够，降为备用"],["2028-03","第一次 TEF：四项 B2 → 立刻更新档案；差 1 项 → 6 月重考"],["2028-09","第三次仍不到 → 放弃"]],
+ worst:"学 18 个月没到 B2：损失 $2–6k 与时间；CEC 经验照常累计，不影响其他路线。",
+ src:[0,1,3]}
 ];
 
 const SRC=[
- ["IRCC · Express Entry 类别抽签（医疗类含 NOC 33102；3 年内同一职业满 12 个月）","https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html"],
- ["IRCC · 抽签数据 JSON（本页所有抽签线来源，至 2026-10-01）","https://www.canada.ca/content/dam/ircc/documents/json/ee_rounds_123_en.json"],
- ["IRCC · 2026-02-18 新闻稿：2026 年 Express Entry 类别（医疗、技工、法语继续）","https://www.canada.ca/en/immigration-refugees-citizenship/news/2026/02/canada-prioritizes-top-talent-in-2026-immigration-express-entry-categories.html"],
- ["IRCC · CEC 要求（全职读书期间的工作不算；每周最多 30 小时；页面日期 2026-09-24）","https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/who-can-apply/canadian-experience-class.html"],
- ["IRCC · 递交 PR 后工签到期怎么办（BOWP 入口，#expire）","https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/after-apply.html#expire"],
- ["IRPR 第 188(1)(c) 条：课程 ≤6 个月且在合法停留期内完成，不需要学签","https://laws-lois.justice.gc.ca/eng/regulations/SOR-2002-227/section-188.html"],
- ["WelcomeBC · Skills Immigration 两条通道（Skilled Worker 要 2 年技能经验；Health Authority 看雇主要求；语言 CLB 4）","https://www.welcomebc.ca/immigrate-to-b-c/for-workers"],
- ["WelcomeBC · BC PNP 优先职业（2026-06-17 更新）：33102 在医疗优先名单，需在 Care Aide Registry 注册；Health Authority 通道职业表","https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/the-bc-provincial-nominee-program"],
- ["WelcomeBC · 邀请记录：Care: Health 定向邀请 2026-05-06 最低 108 分 → 10-08 最低 76 分，约每月一次","https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/invitations-to-apply"],
- ["WelcomeBC · 新闻：2026-04-23 优先方向（Care/Build/Innovate）；ELSS 关闭、不开留学生通道；08-18 配额增至 6,254","https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/news"],
- ["BC PNP Skills Immigration Program Guide（2026-06-10 版）：4.1 Skilled Worker 2 年经验、4.2 Health Authority 通道、第 8 部分打分表","https://www.welcomebc.ca/immigrate-to-b-c/bc-pnp-si-program-guide-pdf"],
- ["BC PNP 2025 年统计报告：卫生局临床岗提名 1,180 人（占 Skills Immigration 22%）","https://www.welcomebc.ca/immigrate-to-b-c/bc-pnp-statistical-report-2025-pdf"],
- ["BC Care Aide & Community Health Worker Registry · 认可课程名单（Drake Medox：Full Recognition）","https://www.cachwr.bc.ca/about-the-registry/list-of-hca-programs-in-bc/"],
- ["Registry · 公立医疗机构做 HCA 必须注册","https://www.cachwr.bc.ca/applicants/"],
- ["Drake Medox College · HCA 课程（26 周；Combined Delivery 每周 1 天 + 线上；7.2 周实习；每月开班）","https://drakemedoxcollege.ca/health-care-assistant/"],
- ["Drake Medox · 学费表（HCA 合计 $10,500，2025-09-01 起）","https://drakemedoxcollege.ca/wp-content/uploads/2025/08/Tuition-Fees-Sept-2025.pdf"],
- ["WorkBC · NOC 33102 职业档案（中位 $27.89/h；53% 全职；新人多 casual 起步）","https://www.workbc.ca/career-profiles/nurse-aides-orderlies-and-patient-service-associates"],
- ["BC 政府 · HCAP 带薪 HCA 培训（仅限公民/PR，本案不适用）","https://www2.gov.bc.ca/gov/content/employment-business/job-seekers-employees/find-a-job/health-care"],
- ["ESDC · LMIA 拒绝受理规则（失业率 ≥6% 的都会区低薪岗不受理；医院/长照 NAICS 622/623 豁免）","https://www.canada.ca/en/employment-social-development/services/foreign-workers/refusal.html"],
- ["Alliance Française 温哥华 · 各级课时与 TEF 对应","https://www.alliancefrancaise.ca/en/language/adult-classes/group-classes/"],
- ["小蟹 · CRS 积分图（crs() 函数来源）","https://thisiscam.github.io/crs-explorer/"]];
+ ["IRCC · Express Entry 抽选记录（数据文件 ee_rounds_123_en.json；本页所有抽选线来源）","https://www.canada.ca/en/immigration-refugees-citizenship/corporate/mandate/policies-operational-instructions-agreements/ministerial-instructions/express-entry-rounds.html"],
+ ["IRCC · 类别选择名单（Trades 含 63201 屠夫、不含 63200 厨师；医疗含 33101/33102/33103）","https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/rounds-invitations/category-based-selection.html"],
+ ["IRCC · CEC 资格（TEER 3 需 CLB 5；页面日期 2026-09-24）","https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/who-can-apply/canadian-experience-class.html"],
+ ["IRCC · CRS 评分表（兄弟姐妹 +15 条件：18 岁以上、公民或 PR、住在加拿大）","https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/crs-criteria.html"],
+ ["IRCC · 语言换算（只认 IELTS GT / CELPIP-G / PTE Core；不认 Academic）","https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html"],
+ ["IRCC · BOWP（递交 PR 后的过桥工签）","https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/pr-work-permits/bridging.html"],
+ ["WelcomeBC · Skills Immigration 两条流（Skilled Worker 2 年经验；Health Authority）","https://www.welcomebc.ca/immigrate-to-b-c/for-workers"],
+ ["WelcomeBC · BC PNP 优先职业与定向邀请类别（2026-06-17 更新）","https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/the-bc-provincial-nominee-program"],
+ ["WelcomeBC · 邀请记录（Care: Health 2026 最低 76–108 分；截至 2026-10-08）","https://www.welcomebc.ca/immigrate-to-b-c/about-the-bc-provincial-nominee-program/invitations-to-apply"],
+ ["AAIP · 处理信息与配额（2026 配额 6,603；RRS 1,057；更新 2026-10-07）","https://www.alberta.ca/aaip-processing-information"],
+ ["AAIP · Rural Renewal Stream 资格（任何有效工签；12 个月 ≥30 h/周；CLB 5）","https://www.alberta.ca/aaip-rural-renewal-stream-eligibility"],
+ ["AAIP · Worker EOI 评分表（2026-09-28 版）","https://www.alberta.ca/system/files/im-worker-stream-expression-of-interest-points-grid.pdf"],
+ ["AAIP · Tourism & Hospitality 流资格（需 LMIA 工签；2026 配额 156）","https://www.alberta.ca/tourism-and-hospitality-stream-eligibility"],
+ ["IRCC · 大西洋移民计划 AIP 资格（页面日期 2026-06-22）","https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/atlantic-immigration/how-to-immigrate/eligibility.html"],
+ ["IRCC · 乡村社区移民试点 RCIP（14 个社区，含 BC 三个）","https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/rural-franco-pilots.html"],
+ ["West Kootenay RCIP（330 家指定雇主；最近一轮最低 93 分；更新 2026-09-09）","https://westkootenayimmigration.ca/"],
+ ["North Okanagan-Shuswap RCIP（2026 五个窗口，分数线 91–94）","https://rcipnorthokanaganshuswap.com/"],
+ ["Nova Scotia 提名优先级（2026-04-27：非优先职业仅 TEER 0–2）","https://liveinnovascotia.com/resources/nominee-program-priorities-nova-scotia"],
+ ["ESDC · LMIA 工资线（BC 高薪线 $38.40/h，2026-07-17 起）与低薪流规则","https://www.canada.ca/en/employment-social-development/services/foreign-workers/median-wage.html"],
+ ["OINP · 2026 重构与 Workforce Priority Stream","https://www.ontario.ca/page/ontario-workforce-priority-stream"],
+ ["MPNP · Skilled Worker in Manitoba","https://immigratemanitoba.com/mpnp/skilled-worker/swm/"],
+ ["NWT · Employer-Driven Stream","https://www.immigratenwt.ca/employer-driven-stream"],
+ ["IRCC · 家庭护理员试点（2026-10-11 状态 Closed）","https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/caregivers/home-care-worker-immigration-pilots.html"],
+ ["AAIP · Alberta Opportunity Stream 资格（PGWP 仅限阿省公立院校毕业生）","https://www.alberta.ca/aaip-alberta-opportunity-stream-eligibility"]];
+
+const REJ=[
+ ["BC PNP（以厨师身份）","x","2026 只给 Care/Build/High-Economic-Impact 定向邀请；Skilled Worker 流要 2 年经验且无定向邀请不会被邀；注册池 7,695 人中 130+ 分约 200 人，$24/h 厨师够不到。概率≈0"],
+ ["AAIP Tourism & Hospitality / Alberta Opportunity Stream","x","都要 LMIA 工签（AOS 只接受阿省院校 PGWP）；2026 T&H 配额仅 156"],
+ ["大温 LMIA 续身份","x","低薪流在失业率 ≥6% 的 CMA 一律拒收；BC 高薪线 $38.40/h 远高于 $24"],
+ ["EE STEM（保险代理 63100）/ Education（教师助理 43100）","w","职业可快速入行（BC 保险牌照数周；EA 证书约 1 年），但 2026 两类零抽选；若 2027 恢复抽选，63100 是最快的“换类别”办法，保留观察"],
+ ["FSW / FST","x","FSW 同样卡 CRS；FST 不认厨师行业"],
+ ["EE Transport / 医生 / 高管 / 研究者 / 军人类别","x","职业不适用"],
+ ["安省 OINP Workforce Priority Stream","b","可行但不如阿省/AIP：需先搬安省同雇主做满 6 个月；时薪 $20–24.99 只有 5 分，分数线未公布"],
+ ["曼省 MPNP Skilled Worker","b","需曼省雇主持续雇佣（常规 6 个月全职 + 长期 offer）；细则未抓到；搬迁备选"],
+ ["西北地区 NWT Employer-Driven","b","需 NWT 雇主主导；偏远、名额小；末位备选"],
+ ["萨省 SINP / 育空 YNP / PEI PNP","x","官方页面 404 或反爬，2026 规则无法核实，不作推荐"],
+ ["新斯科舍 NSNP","x","2026-04 优先级把非优先职业限制在 TEER 0–2（厨师 TEER 3）"],
+ ["家庭护理员试点","x","2026-10-11 状态 Closed；若 2027 重开可作转行备选（CLB 4、高中学历、家庭护理 offer）"],
+ ["法语社区试点 FCIP","x","无法语（法语类别见路线 6）"],
+ ["Agri-Food Pilot","x","职业不符（仅肉类加工等特定职业），2025 已达上限"],
+ ["再读一个学位","x","已持 PGWP 者无第二个 PGWP；读书只作转行工具（见路线 2）"],
+ ["配偶担保","x","单身，不适用"],
+ ["继兄弟姐妹 +15","b","当前住在境外，0 分；回加定居才可加（且“继”是否算数未核实）→ 只在路线 5 内作为变量"]];
 
 const PRE=[
- "雅思 7/6.5/6.5/6 是 <b>G 类还是 A 类</b>、考试日期（EE 只认 G 类，2 年有效）。",
- "第一周工资单 40 小时 vs 实际 16.5 小时 → 影响 1560 小时的达标日（2027-03-15 ～ 03-24）。",
- "Drake Medox 周日 Combined Delivery 班 2027-03 的确切开课/结课日，是否「≤6 个月」符合 IRPR 188(1)(c)。",
- "HCA 全职读书期间若继续打工，工时<b>不计</b> CEC（IRCC 页面已核实）。",
- "医疗类 2027 年名单是否仍含 33102（IRCC 约每年 2 月公布）。",
- "兄弟姐妹是否会在 2028 年前搬回加拿大定居（+15，需居住证明）。",
- "卫生局是否支持 HCA 新人的 BC PNP 申请（各卫生局 HR 自定流程，要直接问）。",
- "RCIP（乡村社区试点）在 BC 的社区（West Kootenay、North Okanagan-Shuswap、Peace Liard）需要搬离大温且由社区推荐，本页未列为主线；官方页面当日未能打开，待查。"];
+ "现有雅思是 <b>Academic 还是 General Training</b>、考试日期——决定能否直接用；无论如何建议重考（EE 只认 GT/CELPIP/PTE Core，2 年有效）。",
+ "IRCC 对“继兄弟姐妹”是否计入 15 分的细则页面未抓到。",
+ "2026–2028 移民水平计划官方页面 404；PNP 总配额仅从阿省数据（2025 6,403 → 2026 6,603）间接推断。",
+ "温哥华 CMA 当前失业率（决定低薪 LMIA 是否被拒收）。",
+ "BC RCIP 三社区的优先职业名单是否含 63200、社区推荐评分表、是否收费。",
+ "AIP 各省（NB/PEI/NL）2026 endorsement 名额与对 TEER 3 餐饮岗位的态度；NS 的 NSNP 优先级是否同样适用于 AIP。",
+ "BC PNP Skills Immigration Program Guide 评分细则未抓到；Care: Health 定向邀请是否豁免 Skilled Worker 流的 2 年经验要求。",
+ "MPNP SWM 具体月数要求、SINP 2026 规则、育空 YNP 规则。",
+ "IRCC “PNP 候选人工签临时公共政策”2026 年是否延续，BC/阿省是否参与。",
+ "AAIP RRS 对 28.5 h/周（非 30 h）经验的认定。",
+ "<b>2027 年 Express Entry 类别名单</b>（通常 2 月公布）——路线 1、2 的最大单点风险。",
+ "小时数：按 28.5 h/周平均，1,560 h 约 2027-03 中下旬，3,120 h 约 2028-04 上旬；3 年（4,680 h）在 PGWP 内攒不满。"];
 
-// ===== 概率引擎：三角分布抽样 + 共用环节精确枚举 =====
+// ===== 概率引擎 =====
 const $=id=>document.getElementById(id);
-let P={}; // 当前中心值（含共用）
-function allStages(){ const out=[]; PLANS.forEach(pl=>pl.stages.forEach((s,i)=>{ if(s.ref){out.push({key:s.ref,...SH[s.ref],shared:true});} else if(s.alt){ s.alt.forEach((a,j)=>out.push({key:pl.id+i+"_"+j,...a})); } else out.push({key:pl.id+i,...s}); })); return out; }
-function init(){ allStages().forEach(s=>{ if(!(s.key in P)) P[s.key]={lo:s.lo,c:s.c,hi:s.hi,d0:[s.lo,s.c,s.hi]}; }); }
+let P={};
+function eachOwn(pl,fn){ pl.stages.forEach((s,i)=>{ if(s.ref) return; if(s.alt) s.alt.forEach((a,j)=>fn(a,pl.id+i+"_"+j)); else if(s.mix){ s.mix.bonus.forEach((a,j)=>fn(a,pl.id+i+"b"+j)); fn(s.mix.lo,pl.id+i+"lo"); fn(s.mix.hi,pl.id+i+"hi"); } else fn(s,pl.id+i); }); }
+function init(){ for(const k in SH) P[k]={lo:SH[k].lo,c:SH[k].c,hi:SH[k].hi,d0:[SH[k].lo,SH[k].c,SH[k].hi]}; PLANS.forEach(pl=>eachOwn(pl,(s,k)=>{P[k]={lo:s.lo,c:s.c,hi:s.hi,d0:[s.lo,s.c,s.hi]};})); }
 function tri(lo,c,hi){ const u=Math.random(); if(hi<=lo) return c; const f=(c-lo)/(hi-lo); return u<f? lo+Math.sqrt(u*(hi-lo)*(c-lo)) : hi-Math.sqrt((1-u)*(hi-lo)*(hi-c)); }
-function stageKeys(pl){ const own=[],sh=[]; pl.stages.forEach((s,i)=>{ if(s.ref) sh.push(s.ref); else if(s.alt) own.push(s.alt.map((a,j)=>pl.id+i+"_"+j)); else own.push([pl.id+i]); }); return {own,sh}; }
-// 给定一组抽样概率 v，某方案自身（不含共用）成功率
-function ownP(pl,v){ return stageKeys(pl).own.reduce((acc,g)=>acc*(1-g.reduce((q,k)=>q*(1-v[k]),1)),1); }
 function sample(){ const v={}; for(const k in P) v[k]=tri(P[k].lo,P[k].c,P[k].hi); return v; }
-function planP(pl,v){ return ownP(pl,v)*stageKeys(pl).sh.reduce((a,k)=>a*v[k],1); }
-function anyP(pls,v){ // 共用环节枚举，其它独立
-  const sh=[...new Set(pls.flatMap(p=>stageKeys(p).sh))]; let tot=0;
-  for(let m=0;m<(1<<sh.length);m++){ let w=1; const ok={}; sh.forEach((k,i)=>{const on=(m>>i)&1; ok[k]=on; w*=on?v[k]:1-v[k];});
-    let fail=1; pls.forEach(p=>{ const need=stageKeys(p).sh.every(k=>ok[k]); fail*=1-(need?ownP(p,v):0); }); tot+=w*(1-fail); }
-  return tot;
-}
+function sharedOf(pls){ const set=new Set(); pls.forEach(pl=>pl.stages.forEach(s=>{ if(s.ref) set.add(s.ref); (s.alt||[]).forEach(a=>(a.needs||[]).forEach(k=>set.add(k))); (s.needs||[]).forEach(k=>set.add(k)); })); return [...set]; }
+function mixP(pl,i,s,v){ const Bn=1-s.mix.bonus.reduce((q,a,j)=>q*(1-v[pl.id+i+"b"+j]),1); const lo=v[pl.id+i+"lo"],hi=v[pl.id+i+"hi"]; return lo+Bn*(hi-lo); }
+function polPts(pls,v){ const pts=new Set([0,1]); pls.forEach(pl=>pl.stages.forEach((s,i)=>{ if(s.mix) pts.add(mixP(pl,i,s,v)); else if(s.fam=="pol") pts.add(v[pl.id+i]); (s.alt||[]).forEach((a,j)=>{ if(a.fam=="pol") pts.add(v[pl.id+i+"_"+j]); }); })); return [...pts].sort((a,b)=>a-b); }
+function sv(p,s,ok,u){ if(s.needs&&!s.needs.every(k=>ok[k])) return 0; if(s.fam=="pol"){ const r=s.rho==null?1:s.rho; return r*(u<p?1:0)+(1-r)*p; } return p; }
+function famExp(ps,rho){ const b=[...ps].sort((x,y)=>x-y); b.push(1); let tot=0,a=0; for(const e of b){ if(e>a){ let val=1; ps.forEach(p=>val*=rho*(p>=e?1:0)+(1-rho)*p); tot+=(e-a)*val; a=e; } } return tot; }
+function routeP(pl,v,ok,u){ let pr=1; const emp=[];
+  pl.stages.forEach((s,i)=>{ if(s.ref) pr*=ok[s.ref]?1:0;
+    else if(s.alt){ let f=1; s.alt.forEach((a,j)=>f*=1-sv(v[pl.id+i+"_"+j],a,ok,u)); pr*=1-f; }
+    else if(s.mix) pr*=sv(mixP(pl,i,s,v),s,ok,u);
+    else if(s.fam=="emp") emp.push(v[pl.id+i]);
+    else pr*=sv(v[pl.id+i],s,ok,u); });
+  if(emp.length) pr*=famExp(emp,pl.rho||.7); return pr; }
+function anyP(pls,v){ if(!pls.length) return 0; const sh=sharedOf(pls), pts=polPts(pls,v); let tot=0;
+  for(let m=0;m<(1<<sh.length);m++){ let w=1; const ok={}; sh.forEach((k,i)=>{const on=(m>>i)&1; ok[k]=on; w*=on?v[k]:1-v[k];}); if(w<1e-9) continue;
+    for(let t=0;t<pts.length-1;t++){ const a=pts[t],b=pts[t+1]; if(b<=a) continue; const u=(a+b)/2; let fail=1; pls.forEach(pl=>fail*=1-routeP(pl,v,ok,u)); tot+=w*(b-a)*(1-fail); } }
+  return tot; }
 function qs(arr){ arr.sort((a,b)=>a-b); const q=p=>arr[Math.min(arr.length-1,Math.floor(p*arr.length))]; return {p10:q(.1),med:q(.5),p90:q(.9)}; }
-function run(N=2500){ const res=PLANS.map(()=>[]), any=[]; const sel=PLANS.filter(p=>ON.has(p.id));
-  for(let i=0;i<N;i++){ const v=sample(); PLANS.forEach((p,j)=>res[j].push(planP(p,v))); any.push(sel.length?anyP(sel,v):0); }
-  return {plans:res.map(qs),any:qs(any)}; }
+const byId=id=>PLANS.find(p=>p.id==id);
+const COMBOS=[["什么都不改：只守 5",["5"],"≈20%"],["不搬家、不读书：1 + 5 + 6",["1","5","6"],"45–55%"],["不搬家、可再培训：2 + 5",["2","5"],"50–60%"],["愿意搬家：3 + 5",["3","5"],"55–65%"],["愿意搬家：4 + 5",["4","5"],"55–65%"],["全部可选：主线 + 5 + 6（最佳主线）",null,"65–75%"]];
+function run(N=1200){ const res=PLANS.map(()=>[]), any=[], cmb=COMBOS.map(()=>[]), best=PLANS.filter(p=>p.main).map(()=>[]);
+  const sel=[...SEL].map(byId), mains=PLANS.filter(p=>p.main);
+  for(let i=0;i<N;i++){ const v=sample(); PLANS.forEach((p,j)=>res[j].push(anyP([p],v))); any.push(anyP(sel,v));
+    const bv=mains.map((m,j)=>{ const x=anyP([m,byId("5"),byId("6")],v); best[j].push(x); return x; });
+    COMBOS.forEach((c,j)=>cmb[j].push(c[1]?anyP(c[1].map(byId),v):Math.max(...bv))); }
+  return {plans:res.map(qs),any:qs(any),cmb:cmb.map(qs),best:best.map(qs)}; }
 const pct=x=>Math.round(x*100);
 
-// ===== 渲染 =====
-let CUR="A", ON=new Set(["A","C"]), R;
+// ===== 筛选 / 选择状态 =====
+const FQ=[["job","愿意换工种","屠夫、护理助理等（路线 1、2）"],["move","愿意搬家","离开大温/BC：阿省乡村、大西洋、BC 乡村（路线 3、4）"],["study","愿意再读书","6–8 个月 HCA 课程，$8k–15k（路线 2）"]];
+let F={job:1,move:1,study:1}, SEL=new Set(["2","5","6"]), CUR="2", R;
+const compat=pl=>Object.keys(pl.req).every(k=>F[k]);
+function renderFilters(){ $("flt").innerHTML=FQ.map(f=>`<div class="fb ${F[f[0]]?"on":"off"}" data-f="${f[0]}">${F[f[0]]?"✓ ":"✗ "}${f[1]}<small>${f[2]}</small></div>`).join("");
+  $("flt").querySelectorAll(".fb").forEach(b=>b.onclick=()=>{ F[b.dataset.f]=F[b.dataset.f]?0:1; onFilter(); }); }
+function onFilter(){ [...SEL].forEach(id=>{ if(!compat(byId(id))) SEL.delete(id); });
+  if(![...SEL].some(id=>byId(id).main)){ const c=PLANS.filter(p=>p.main&&compat(p)); if(c.length){ const b=c.reduce((a,p)=>R.plans[PLANS.indexOf(p)].med>R.plans[PLANS.indexOf(a)].med?p:a); SEL.add(b.id);} }
+  if(!compat(byId(CUR))){ const c=PLANS.filter(compat); CUR=c.length?c[0].id:CUR; }
+  renderFilters(); refresh(); timeline(); }
+function renderFsum(){ const ok=PLANS.filter(compat), mains=ok.filter(p=>p.main), bg=ok.filter(p=>!p.main);
+  const bestI=PLANS.filter(p=>p.main).map((m,j)=>compat(m)?R.best[j].med:-1); const bi=bestI.indexOf(Math.max(...bestI));
+  const bm=PLANS.filter(p=>p.main)[bi];
+  $("fsum").innerHTML= mains.length? `按现在的回答，可执行主线：<b>${mains.map(p=>p.id+" "+p.name).join("、")}</b>；后台：${bg.map(p=>p.id).join("、")}。最佳组合 <b>${bm.id} + 5 + 6 ≈ ${pct(R.best[bi].med)}%</b>（10–90%：${pct(R.best[bi].p10)}–${pct(R.best[bi].p90)}%）` :
+   `三个都不愿意 → 只剩后台路线 5 + 6：<b>≈ ${pct(R.cmb[0].med)}%（只守 CEC）</b> / 加上法语约 ${pct(combo56())}%。报告：什么都不改约 20%。`; }
+function combo56(){ const v={}; for(const k in P) v[k]=P[k].c; return anyP([byId("5"),byId("6")],v); }
+
+// ===== 渲染卡片 =====
+function reqTags(pl){ const t=[["job","换工种","不换工种"],["move","搬家","不搬家"],["study","再读书","不读书"]]; return t.map(x=>pl.req[x[0]]?`<span class="y">${x[1]}</span>`:`<span>${x[2]}</span>`).join(""); }
 function card(pl,q){
-  const c=CUT[pl.score.cut], lo=380, hi=560, x=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100));
-  const ok=pl.score.v>=c.hi, gap=pl.score.v-c.hi;
-  return `<div class="plan${CUR==pl.id?" on":""}" style="--pc:${pl.col}" data-id="${pl.id}">
-   <div class="nm"><i></i>${pl.id} · ${pl.name}</div><div class="one">${pl.one}</div>
+  let sc="";
+  if(pl.score){ const c=CUT[pl.score.cut], [lo,hi]=c.rg, x=v=>Math.max(0,Math.min(100,(v-lo)/(hi-lo)*100)); const ok=pl.score.v>=c.hi, gap=pl.score.v-c.hi;
+    sc=`<div class="kv"><span class="k">分数</span><span><b>${pl.score.v}</b> <span class="src">vs ${c.n}线 ${c.lo}–${c.hi}</span>
+     <div class="sbar"><div class="f" style="width:${x(pl.score.v)}%"></div><div class="c" style="left:${x(c.lo)}%"></div><div class="c" style="left:${x(c.hi)}%"></div></div>
+     <span class="src">${ok?`高出最高线 ${gap} 分`:`差最高线 <b style="color:var(--bad)">${-gap}</b> 分`} · ${pl.score.lab}；${pl.score.alt}</span></span></div>`; }
+  else sc=`<div class="kv"><span class="k">分数</span><span><b>不看 CRS</b> <span class="src">靠指定雇主 + 背书；RCIP 社区自有评分（WK 93、NOS 91–94）</span></span></div>`;
+  const dim=!compat(pl);
+  return `<div class="plan${CUR==pl.id?" on":""}${dim?" dim":""}" style="--pc:${pl.col}" data-id="${pl.id}">
+   <div class="nm"><i></i>${pl.id} · ${pl.name}${pl.main?"":'<span class="tag">后台</span>'}</div><div class="req">${reqTags(pl)}</div><div class="one">${pl.one}</div>
    <div class="big">${pct(q.med)}<small>%</small></div>
    <div class="ibar"><div class="rg" style="left:${pct(q.p10)}%;width:${pct(q.p90)-pct(q.p10)}%"></div><div class="md" style="left:${pct(q.med)}%"></div></div>
-   <div class="ilab"><span>10–90% 区间 ${pct(q.p10)}–${pct(q.p90)}%</span><span>主观估计</span></div>
-   <div class="kv"><span class="k">分数</span><span><b>${pl.score.v}</b> <span class="src">vs ${c.n}线 ${c.lo}–${c.hi}</span>
-     <div class="sbar"><div class="f" style="width:${x(pl.score.v)}%"></div><div class="c" style="left:${x(c.lo)}%"></div><div class="c" style="left:${x(c.hi)}%"></div></div>
-     <span class="src">${ok?`高出最高线 ${gap} 分`:`差最高线 <b style="color:var(--bad)">${-gap}</b> 分`} · ${pl.score.lab}</span></span>
-     <span class="k">拿 PR</span><span><b>${pl.pr}</b><span class="tag g">推测</span></span></div>
+   <div class="ilab"><span>引擎 10–90% 区间 ${pct(q.p10)}–${pct(q.p90)}%</span><span>${dim?"与你的回答不符":"主观估计"}</span></div>
+   <div class="rep">报告综合判断：<b>${pl.rep[0]}%</b>（80% 区间 ${pl.rep[1]}–${pl.rep[2]}%）</div>
+   ${sc}
+   <div class="kv"><span class="k">前提</span><span>${pl.pre}</span></div>
    <div class="hard"><b>最大难点</b> ${pl.hard}</div></div>`;
 }
 function renderCards(){ $("plans").innerHTML=PLANS.map((p,i)=>card(p,R.plans[i])).join("");
   $("plans").querySelectorAll(".plan").forEach(el=>el.onclick=()=>{CUR=el.dataset.id; renderCards(); timeline(); openDetail();}); }
 
-// 时间线：月 0 = 2026-10
+// ===== 时间线：月 0 = 2026-10 =====
 const M0=[2026,10], NM=33; const mi=(y,m)=>(y-M0[0])*12+(m-M0[1]);
 const TL={
- A:[["厨师攒 CEC",0,5.5],["CELPIP",0,4],["读 HCA",5,11],["找工作",11,13],["HCA 满 12 个月",13,25.5],["抽签 / BC PNP",25.5,29],["PR 审理",29,33]],
- B:[["厨师攒 CEC（持续）",0,29],["学法语 → B2",1,23],["TEF 考 3 次",17,24],["法语抽签",20,27],["PR 审理",27,33]],
- C:[["厨师攒 CEC（持续）",0,29],["CELPIP 冲 CLB 10",0,8],["入池等线（489→502）",5.5,28],["PR 审理",28,33]]};
+ "1":[["考语言 → CLB 9",0,4],["厨师攒 1,560 h",0,5.5],["找屠夫岗",2,6],["屠夫 12 个月（≈30 h/周）",6,18.5],["等 Trades 抽选 → ITA → AOR",18.5,26],["BOWP + PR 审理",26,33]],
+ "2":[["考语言",1,4],["厨师攒 1,560 h / 兼职",0,11],["HCA 课程 + 实习",3,11],["注册 + 入职 HCA",12,13.5],["BC PNP 注册 → 邀请 → 提名 → ITA → AOR",13,22.5],["HCA 满 12 个月 → 医疗类抽选",24,28.5],["BOWP + PR 审理",22.5,33]],
+ "3":[["考语言 + 远程找阿省乡村岗",1,6],["搬阿省 · EOI · 争取背书",6,12],["12 个月 ≥30 h/周",6,18],["AAIP ITA → 申请 → 提名",12,20],["EE +600 → PNP 抽选 → AOR",18,22.5],["省提名工签 / BOWP + PR 审理",22.5,33]],
+ "4":[["考语言 + 联系指定雇主",1,5],["offer → 定居计划 → endorsement",6,9.5],["递 PR + AIP 工签",9.5,11.5],["PR 审理（6–12 个月）",11.5,20],["RCIP 变体：先在社区做厨师 6–12 月",6,16]],
+ "5":[["厨师攒 CEC（持续）",0,29],["考语言冲 CLB 10",1,4],["入池 489 → 满 2 年 502",5.5,18],["等 CEC 抽选（约 20 次）",18,28.5],["BOWP",27,29]],
+ "6":[["厨师攒 CEC（持续）",0,29],["学法语 → B2",1,24],["TEF/TCF 考 2–3 次",17,24],["法语抽选 → AOR",24,28.5],["BOWP + PR 审理",28.5,33]]};
 function timeline(){
-  const W=Math.max(620,$("tl").clientWidth||700), L=14, R_=10, top=22, rowH=18, gap=8, lanes=TL;
-  const rows=[]; PLANS.forEach(p=>{ rows.push({hdr:p}); lanes[p.id].forEach(b=>rows.push({b,p})); });
+  const W=Math.max(620,$("tl").clientWidth||700), L=14, R_=10, top=22, rowH=18;
+  const rows=[]; PLANS.forEach(p=>{ rows.push({hdr:p}); TL[p.id].forEach(b=>rows.push({b,p})); });
   const H=top+rows.length*rowH+30, x=m=>L+m/NM*(W-L-R_);
-  let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="三条路线时间线">`;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="六条路线时间线">`;
   for(let m=0;m<=NM;m+=3){ const y=M0[0]+Math.floor((M0[1]-1+m)/12), mo=(M0[1]-1+m)%12+1;
     s+=`<line x1="${x(m)}" x2="${x(m)}" y1="${top-6}" y2="${H-22}" stroke="var(--grid)"/><text x="${x(m)}" y="${H-10}" font-size="10" fill="var(--text-muted)" text-anchor="middle">${y}-${String(mo).padStart(2,"0")}</text>`; }
-  let y=top; rows.forEach(r=>{ if(r.hdr){ s+=`<text x="${L}" y="${y+12}" font-size="12" font-weight="700" fill="${r.hdr.col}" opacity="${CUR==r.hdr.id?1:.55}">${r.hdr.id} · ${r.hdr.name}</text>`; }
-    else { const [n,a,b]=r.b, on=CUR==r.p.id; s+=`<rect x="${x(a)}" y="${y+2}" width="${Math.max(3,x(b)-x(a))}" height="${rowH-5}" rx="4" fill="${r.p.col}" opacity="${on?.85:.28}"/><text x="${x(a)+4}" y="${y+rowH-7}" font-size="10.5" fill="${on?"var(--surface-1)":"var(--text-secondary)"}">${n}</text>`; }
+  let y=top; rows.forEach(r=>{ if(r.hdr){ const d=!compat(r.hdr); s+=`<text x="${L}" y="${y+12}" font-size="12" font-weight="700" fill="${r.hdr.col}" opacity="${d?.25:CUR==r.hdr.id?1:.55}">${r.hdr.id} · ${r.hdr.name}${d?"（与回答不符）":""}</text>`; }
+    else { const [n,a,b]=r.b, on=CUR==r.p.id, d=!compat(r.p); s+=`<rect x="${x(a)}" y="${y+2}" width="${Math.max(3,x(b)-x(a))}" height="${rowH-5}" rx="4" fill="${r.p.col}" opacity="${d?.12:on?.85:.28}"/><text x="${x(a)+4}" y="${y+rowH-7}" font-size="10.5" fill="${on&&!d?"var(--surface-1)":"var(--text-secondary)"}" opacity="${d?.4:1}">${n}</text>`; }
     y+=rowH; });
   const mk=(m,lab,col)=>`<line x1="${x(m)}" x2="${x(m)}" y1="${top-8}" y2="${H-22}" stroke="${col}" stroke-width="1.5" stroke-dasharray="4 3"/><text x="${x(m)+3}" y="${top-10}" font-size="10" font-weight="600" fill="${col}">${lab}</text>`;
-  s+=mk(0.35,"今天","var(--text-primary)")+mk(mi(2027,3)+0.5,"CEC 满 1 年","var(--good)")+mk(mi(2029,3),"PGWP 到期 2029-03-01","var(--bad)");
+  s+=mk(0.35,"今天","var(--text-primary)")+mk(mi(2027,3)+0.6,"满 1,560 h","var(--good)")+mk(mi(2028,4)+0.2,"满 2 年","var(--good)")+mk(mi(2029,3),"PGWP 到期 2029-03-01","var(--bad)");
   s+=`</svg>`; $("tl").innerHTML=s;
 }
-function chips(){ $("chips").innerHTML=PLANS.map(p=>`<span class="chip${ON.has(p.id)?" on":""}" data-id="${p.id}"><i style="background:${p.col}"></i>${p.id} ${p.name}</span>`).join("");
-  $("chips").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ const id=c.dataset.id; ON.has(id)?ON.delete(id):ON.add(id); refresh(); }); }
-function renderAny(){ const q=R.any, n=ON.size; $("anyP").innerHTML=n?`${pct(q.med)}<small style="font-size:13px;color:var(--text-muted)">% 至少一条成功</small>`:"–";
+
+// ===== 组合 =====
+function chips(){ $("chips").innerHTML=`<span class="note" style="margin:0 6px 6px 0">主线：</span>`+PLANS.filter(p=>p.main).map(ch).join("")+`<br><span class="note" style="margin:0 6px 6px 0">后台：</span>`+PLANS.filter(p=>!p.main).map(ch).join("");
+  $("chips").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ const id=c.dataset.id, pl=byId(id); if(!compat(pl)) return;
+    if(SEL.has(id)) SEL.delete(id); else { if(pl.main) PLANS.filter(p=>p.main).forEach(p=>SEL.delete(p.id)); SEL.add(id); } refresh(); }); }
+function ch(p){ const d=!compat(p); return `<span class="chip${SEL.has(p.id)?" on":""}${d?" dis":""}" data-id="${p.id}"><i style="background:${p.col}"></i>${p.id} ${p.name}</span>`; }
+function renderAny(){ const q=R.any, n=SEL.size; $("anyP").innerHTML=n?`${pct(q.med)}<small style="font-size:13px;color:var(--text-muted)">% 至少一条成功（AOR 在 2029-03 前）</small>`:"–";
   $("anyI").textContent=n?`10–90%：${pct(q.p10)}–${pct(q.p90)}%`:"";
-  $("anyN").textContent= ON.has("A")&&ON.has("B")?"注意：A 和 B 同时跑意味着读 HCA 的半年里法语只能保温，实际会比这里低一些":(n?"共用环节已去重；其余环节按独立处理（偏乐观）":"选几条路线"); }
-function stageRow(key,s,pl){ const p=P[key]; return `<div class="stg"><div class="t">${s.n}<span class="tag ${s.tag}">${{f:"事实",a:"假设",g:"推测"}[s.tag]}</span><small>${s.by?"⏱ "+s.by+" · ":""}${s.why}</small></div>
+  const notes=[]; if(SEL.has("2")&&SEL.has("6")) notes.push("2 + 6 同时跑：读 HCA 的半年里法语只能保温，实际比这里低一些");
+  if(SEL.has("1")&&SEL.has("5")) notes.push("1 和 5 的政策风险同源（IRCC 收紧会一起失效），已按同向相关计算");
+  if(!n) notes.push("选几条路线");
+  $("anyN").textContent=notes.join("；");
+  $("combos").innerHTML=`<tr><th>报告里的四种情形</th><th style="text-align:right">引擎</th><th style="text-align:right">报告</th></tr>`+COMBOS.map((c,j)=>`<tr><td>${c[0]}</td><td class="n"><b>${pct(R.cmb[j].med)}%</b> <span class="src">(${pct(R.cmb[j].p10)}–${pct(R.cmb[j].p90)})</span></td><td class="n">${c[2]}</td></tr>`).join(""); }
+
+// ===== 细节 =====
+const TN={f:"事实",a:"假设",g:"推测"};
+function stageRow(key,s){ const p=P[key]; return `<div class="stg"><div class="t">${s.n}<span class="tag ${s.tag}">${TN[s.tag]}</span>${s.fam?`<span class="tag">${s.fam=="pol"?"政策相关":"雇主相关"}</span>`:""}<small>${s.by?"⏱ "+s.by+" · ":""}${s.why}</small></div>
   <div class="v">${pct(p.c)}%<small>${pct(p.lo)}–${pct(p.hi)}</small></div><input type="range" min="1" max="99" value="${pct(p.c)}" data-k="${key}"></div>`; }
+function mixNow(pl,i,s){ const v={}; for(const k in P) v[k]=P[k].c; return mixP(pl,i,s,v); }
 function detail(pl,q){
   let h=`<details ${CUR==pl.id?"open":""} data-id="${pl.id}" style="--pc:${pl.col}"><summary><i style="background:${pl.col}"></i>${pl.id} · ${pl.name} · ${pct(q.med)}%（${pct(q.p10)}–${pct(q.p90)}%）</summary>
-   <div class="note">成功率 = 各环节相乘（「任一即可」的环节按 1−∏(1−p)）；拖滑块改中心值，区间按三角分布 2500 次抽样。<button class="btn" data-reset="${pl.id}" style="float:right">重置</button></div>`;
-  pl.stages.forEach((s,i)=>{ if(s.ref) h+=stageRow(s.ref,{...SH[s.ref],n:SH[s.ref].n+"（共用）"},pl); else if(s.alt){ h+=`<div class="stg" style="border-bottom:0;padding-bottom:0"><div class="t"><b>${s.n}</b></div><div class="v"></div></div><div class="alt">`+s.alt.map((a,j)=>stageRow(pl.id+i+"_"+j,a,pl)).join("")+`</div><div class="orl">任一成功即可 → 合计 ${pct(1-s.alt.reduce((q,a,j)=>q*(1-P[pl.id+i+"_"+j].c),1))}%</div>`; } else h+=stageRow(pl.id+i,s,pl); });
+   <div class="note">各环节相乘（“任一即可”按 1−∏(1−p)；雇主相关环节按正相关 0.7；政策相关环节同向）；拖滑块改中心值，区间按三角分布抽样。报告综合判断 ${pl.rep[0]}%（${pl.rep[1]}–${pl.rep[2]}%）比连乘略高，因为它把“好雇主同时解决多步”等正相关主观上调了。<button class="btn" data-reset="${pl.id}" style="float:right">重置</button></div>`;
+  pl.stages.forEach((s,i)=>{ if(s.ref) h+=stageRow(s.ref,{...SH[s.ref],n:SH[s.ref].n+"（共用）"});
+    else if(s.alt){ h+=`<div class="stg" style="border-bottom:0;padding-bottom:0"><div class="t"><b>${s.n}</b></div><div class="v"></div></div><div class="alt">`+s.alt.map((a,j)=>stageRow(pl.id+i+"_"+j,a)).join("")+`</div><div class="orl" data-orl="${pl.id}">任一成功即可 → 合计约 ${pct(1-s.alt.reduce((q,a,j)=>q*(1-P[pl.id+i+"_"+j].c),1))}%（EE 一轨还乘以 CLB 9 概率）</div>`; }
+    else if(s.mix){ h+=`<div class="stg" style="border-bottom:0;padding-bottom:0"><div class="t"><b>${s.n}</b><span class="tag ${s.tag}">${TN[s.tag]}</span><span class="tag">政策相关</span></div><div class="v" data-mix="${pl.id}">${pct(mixNow(pl,i,s))}%</div></div><div class="alt"><div class="orl" style="margin-left:0">加分来源（任一即可）：</div>`+s.mix.bonus.map((a,j)=>stageRow(pl.id+i+"b"+j,a)).join("")+`<div class="orl" style="margin-left:0">线 ≤ 分的概率：</div>`+stageRow(pl.id+i+"lo",s.mix.lo)+stageRow(pl.id+i+"hi",s.mix.hi)+`</div><div class="orl">合计 = (1−P加分)×P无加分 + P加分×P有加分</div>`; }
+    else h+=stageRow(pl.id+i,s); });
+  h+=`<div class="h3">逐月时间线</div>`+pl.tl.map(d=>`<div class="dp"><b>${d[0]}</b><span>${d[1]}</span></div>`).join("");
   h+=`<div class="h3">难点 → 对策</div><ul class="lst">`+pl.diff.map(d=>`<li><b>${d[0]}</b><br><span class="m">→ ${d[1]}</span></li>`).join("")+`</ul>`;
   h+=`<div class="h3">决策点（到点就看）</div>`+pl.dec.map(d=>`<div class="dp"><b>${d[0]}</b><span>${d[1]}</span></div>`).join("");
-  h+=`<div class="worst"><b>最坏情况</b> ${pl.worst}</div></details>`; return h;
+  h+=`<div class="worst"><b>最坏情况</b> ${pl.worst}</div>`;
+  h+=`<div class="h3">来源</div><ol class="src">`+pl.src.map(i=>`<li><a href="${SRC[i][1]}">${SRC[i][0]}</a></li>`).join("")+`</ol></details>`; return h;
 }
-function renderDetails(){ const c=CUT; $("details").innerHTML=`<div class="sec">每条路线的环节、难点、决策点（拖滑块看变化）</div>`+PLANS.map((p,i)=>detail(p,R.plans[i])).join("")+
-  `<div class="note">抽签线备注：${Object.values(c).map(v=>`<b>${v.n}</b> ${v.note}`).join("；")}。</div>`;
+function renderDetails(){ $("details").innerHTML=`<div class="sec">每条路线的环节、时间线、难点、决策点（拖滑块看变化）</div>`+PLANS.map((p,i)=>detail(p,R.plans[i])).join("")+
+  `<div class="note">抽选线备注：${Object.values(CUT).map(v=>`<b>${v.n}</b> ${v.note}`).join("；")}。</div>`;
   $("details").querySelectorAll("input[type=range]").forEach(r=>{ r.oninput=()=>{ const k=r.dataset.k, v=+r.value/100, d=v-P[k].c; P[k].c=v; P[k].lo=Math.max(.01,Math.min(v,P[k].lo+d)); P[k].hi=Math.min(.99,Math.max(v,P[k].hi+d)); refresh(true); }; });
-  $("details").querySelectorAll("[data-reset]").forEach(b=>b.onclick=e=>{ e.preventDefault(); const pl=PLANS.find(p=>p.id==b.dataset.reset); const {own,sh}=stageKeys(pl); [...own.flat(),...sh].forEach(k=>{const [lo,c,hi]=P[k].d0; Object.assign(P[k],{lo,c,hi});}); refresh(); });
+  $("details").querySelectorAll("[data-reset]").forEach(b=>b.onclick=e=>{ e.preventDefault(); const pl=byId(b.dataset.reset); const ks=sharedOf([pl]); eachOwn(pl,(s,k)=>ks.push(k)); ks.forEach(k=>{const [lo,c,hi]=P[k].d0; Object.assign(P[k],{lo,c,hi});}); refresh(); });
   $("details").querySelectorAll("details").forEach(d=>d.addEventListener("toggle",()=>{ if(d.open){CUR=d.dataset.id; renderCards(); timeline();} })); }
 function openDetail(){ $("details").querySelectorAll("details").forEach(d=>{ d.open=d.dataset.id==CUR; }); }
-function refresh(light){ R=run(); renderCards(); renderAny(); if(light){ // 只更新数字，不重建滑块
-    $("details").querySelectorAll("details").forEach((d,i)=>{ const q=R.plans[i]; d.querySelector("summary").innerHTML=`<i style="background:${PLANS[i].col}"></i>${PLANS[i].id} · ${PLANS[i].name} · ${pct(q.med)}%（${pct(q.p10)}–${pct(q.p90)}%）`;
+function refresh(light){ R=run(); renderCards(); renderAny(); renderFsum(); chips();
+  if(light){ $("details").querySelectorAll("details").forEach((d,i)=>{ const q=R.plans[i], pl=PLANS[i]; d.querySelector("summary").innerHTML=`<i style="background:${pl.col}"></i>${pl.id} · ${pl.name} · ${pct(q.med)}%（${pct(q.p10)}–${pct(q.p90)}%）`;
       d.querySelectorAll("input[type=range]").forEach(r=>{ const p=P[r.dataset.k]; r.parentNode.querySelector(".v").innerHTML=`${pct(p.c)}%<small>${pct(p.lo)}–${pct(p.hi)}</small>`; });
-      const pl=PLANS[i]; pl.stages.forEach((s,k)=>{ if(s.alt){ const o=d.querySelector(".orl"); if(o) o.textContent=`任一成功即可 → 合计 ${pct(1-s.alt.reduce((q,a,j)=>q*(1-P[pl.id+k+"_"+j].c),1))}%`; } }); }); }
-  else { renderDetails(); } }
-init(); chips(); R=run(); renderCards(); timeline(); renderAny(); renderDetails();
+      pl.stages.forEach((s,k)=>{ if(s.alt){ const o=d.querySelector("[data-orl]"); if(o) o.textContent=`任一成功即可 → 合计约 ${pct(1-s.alt.reduce((q,a,j)=>q*(1-P[pl.id+k+"_"+j].c),1))}%（EE 一轨还乘以 CLB 9 概率）`; }
+        if(s.mix){ const o=d.querySelector("[data-mix]"); if(o) o.textContent=`${pct(mixNow(pl,k,s))}%`; } }); }); }
+  else renderDetails(); }
+init(); renderFilters(); R=run(); renderCards(); timeline(); renderAny(); renderFsum(); chips(); renderDetails();
+$("rej").innerHTML=`<tr><th>路线</th><th>状态</th><th>原因</th></tr>`+REJ.map(r=>`<tr><td>${r[0]}</td><td><span class="st ${r[1]}">${{x:"否决",b:"低概率备选",w:"观察"}[r[1]]}</span></td><td>${r[2]}</td></tr>`).join("");
 $("pre").innerHTML=PRE.map(p=>`<li>${p}</li>`).join(""); $("src").innerHTML=SRC.map(s=>`<li>${s[0]}<br><a href="${s[1]}">${s[1]}</a></li>`).join("");
 addEventListener("resize",timeline);
 </script>
