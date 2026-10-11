@@ -163,10 +163,11 @@ const ELIG={
 
 // ===== 控件 =====
 const CTL=[
-  ["年龄","age",[26,28,30,32,35].map(v=>[v,v+"岁"])],
+  ["年龄","age",[25,26,27,28,29,30,31,32,35].map(v=>[v,v+"岁"])],
   ["英语 CLB","en",[6,7,8,9,10].map(v=>[v,"CLB "+v])],
   ["法语 NCLC","fr",[0,5,7,9].map(v=>[v,v?("NCLC "+v):"无"])],
   ["加拿大经验","cwe",[[0,"<1年"],[1,"1年"],[2,"2年"],[3,"3年"],[4,"4年"],[5,"5年+"]]],
+  ["年龄跟着经验涨","link",[[true,"联动"],[false,"不联动"]]],
   ["工作 TEER","teer",[[0,"0/1"],[1,"2/3"],[2,"4/5"]]],
   ["学历","edu",EDU.map((e,i)=>[i,e[0]])],
   ["海外经验","fwe",[[0,"无"],[1,"1–2年"],[2,"3年+"]]],
@@ -175,8 +176,10 @@ const CTL=[
   ["HCA 满 12 个月","hca",[[false,"否"],[true,"是"]]],
   ["省提名","pnp",[[false,"无"],[true,"有"]]],
 ];
-const BASE={age:26,en:9,fr:0,cwe:1,teer:1,edu:5,fwe:0,cdn:1,sib:true,hca:false,pnp:false};
-const PRESETS=[["现在",{cwe:0}],["CEC 满 1 年",{}],["+ 法语 NCLC 7",{fr:7}],["+ HCA 12 个月",{hca:true,cwe:2}],["满 2 年",{cwe:2}],["英语只有 CLB 8",{en:8}]];
+const BASE={link:true,age:26,en:9,fr:0,cwe:1,teer:1,edu:5,fwe:0,cdn:1,sib:true,hca:false,pnp:false};
+const PRESETS=[["现在",{cwe:0}],["CEC 满 1 年",{}],["+ 法语 NCLC 7",{fr:7}],["+ HCA 12 个月",{hca:true,cwe:2,age:27}],["满 2 年",{cwe:2,age:27}],["英语只有 CLB 8",{en:8}]];
+// 联动：经验每多 1 年，年龄也 +1（时间在流逝）
+function withVal(p,key,v){const q={...p,[key]:v}; if(key=="cwe"&&p.link) q.age=p.age+(v-p.cwe); return q;}
 let P={...BASE}, prev=null;
 
 const $=id=>document.getElementById(id);
@@ -184,7 +187,7 @@ function buildControls(){
   $("controls").innerHTML=CTL.map(([k,key,opts])=>`<div class="ctl"><div class="k">${k}</div><div class="seg" data-key="${key}">${
     opts.map(([v,l])=>`<button data-v='${JSON.stringify(v)}'>${l}<small></small></button>`).join("")}</div></div>`).join("");
   $("controls").querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{
-    const key=b.parentNode.dataset.key; P[key]=JSON.parse(b.dataset.v); clearPreset(); render();});
+    const key=b.parentNode.dataset.key; P=withVal(P,key,JSON.parse(b.dataset.v)); clearPreset(); render();});
   $("presets").innerHTML=PRESETS.map(([n],i)=>`<button data-i="${i}">${n}</button>`).join("");
   $("presets").querySelectorAll("button").forEach(b=>b.onclick=()=>{P={...BASE,...PRESETS[b.dataset.i][1]};render();
     clearPreset();b.classList.add("on");});
@@ -208,7 +211,7 @@ function render(){
     seg.querySelectorAll("button").forEach(b=>{
       const v=JSON.parse(b.dataset.v), on=JSON.stringify(P[key])===b.dataset.v;
       b.classList.toggle("on",on);
-      const dd=crs({...P,[key]:v}).total-t, s=b.querySelector("small");
+      const dd=crs(withVal(P,key,v)).total-t, s=b.querySelector("small");
       const unlock=(key=="hca"&&v===true)||(key=="fr"&&v>=7&&P.fr<7);
       s.textContent=on?"·":(dd>0?"+"+dd:dd<0?String(dd):(key=="hca"&&v===true?"解锁医疗":"±0"));
       s.className=on?"":(dd>0?"p":dd<0?"n":"");
@@ -299,7 +302,7 @@ function fixGap(score){
     const acts=[["英语四项 CLB 10",{en:Math.max(P.en,10)}],["法语四项 NCLC 7",{fr:Math.max(P.fr,7)}],
       ["加拿大经验再 +1 年",{cwe:Math.min(5,P.cwe+1)}],["加拿大经验再 +2 年",{cwe:Math.min(5,P.cwe+2)}],
       ["兄弟姐妹是 PR",{sib:true}]];
-    const rows=acts.map(([n,o])=>[n,crs({...P,...o}).total-score]).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]);
+    const rows=acts.map(([n,o])=>[n,crs(Object.entries(o).reduce((q,[k,v])=>withVal(q,k,v),P)).total-score]).filter(r=>r[1]>0).sort((a,b)=>b[1]-a[1]);
     h+=`<div class="fixgap"><div class="fg-title">CEC 还差 <b>${gap}</b> 分，哪个动作能补上？</div>`+
       rows.map(([n,d])=>`<div class="fg-row"><span class="fg-n">${n}</span><div class="fg-bar"><div style="width:${Math.min(100,d/gap*100)}%" class="${d>=gap?"enough":""}"></div><i style="left:100%"></i></div><span class="fg-d">+${d} ${d>=gap?"✅":""}</span></div>`).join("")+
       `<div class="fg-hint">竖线 = 需要补的 ${gap} 分；条超过竖线就够了。几项可以叠加。</div></div>`;
