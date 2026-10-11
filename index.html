@@ -112,7 +112,7 @@ tr.sec td{font-weight:600}
       <ul style="padding-left:18px;margin:6px 0">
         <li>CEC：3 年内累计 1560 小时，每周最多算 30 小时，必须是 TEER 0–3 的工作；全日制学习期间的工作不算。</li>
         <li>CEC 语言门槛：TEER 0/1 需要 CLB 7，TEER 2/3 需要 CLB 5。</li>
-        <li>类别抽签（医疗、技工）一般要求在该类职业连续工作 ≥ 6 个月（需核实）。</li>
+        <li>类别抽签（医疗、技工等）：3 年内在名单上的单一职业累计 12 个月全职（或等量兼职），不必连续，境内外都算。HCA（NOC 33102）在医疗类名单里；厨师（63200）<b>不在</b>技工类名单。</li>
         <li>2025 年 3 月起 job offer 不再加分；30 岁起年龄分逐年递减。</li>
       </ul>
     </details>
@@ -156,7 +156,7 @@ const D={
 const ELIG={
   "CEC":p=>p.cwe>=1&&p.teer!=2&&p.en>=(p.teer==0?7:5),
   "医疗":p=>p.hca?true:false,
-  "技工":p=>null,
+  "技工":p=>false,
   "法语":p=>p.fr>=7,
   "省提名":p=>p.pnp,
 };
@@ -172,11 +172,11 @@ const CTL=[
   ["海外经验","fwe",[[0,"无"],[1,"1–2年"],[2,"3年+"]]],
   ["加拿大学历","cdn",[[0,"无"],[1,"1–2年"],[2,"3年+"]]],
   ["兄弟姐妹 PR","sib",[[false,"无"],[true,"有"]]],
-  ["HCA 满 6 个月","hca",[[false,"否"],[true,"是"]]],
+  ["HCA 满 12 个月","hca",[[false,"否"],[true,"是"]]],
   ["省提名","pnp",[[false,"无"],[true,"有"]]],
 ];
-const BASE={age:26,en:9,fr:0,cwe:1,teer:1,edu:5,fwe:0,cdn:1,sib:false,hca:false,pnp:false};
-const PRESETS=[["现在",{cwe:0}],["CEC 满 1 年",{}],["+ 法语 NCLC 7",{fr:7}],["+ HCA 6 个月",{hca:true}],["满 2 年",{cwe:2}],["英语只有 CLB 8",{en:8}]];
+const BASE={age:26,en:9,fr:0,cwe:1,teer:1,edu:5,fwe:0,cdn:1,sib:true,hca:false,pnp:false};
+const PRESETS=[["现在",{cwe:0}],["CEC 满 1 年",{}],["+ 法语 NCLC 7",{fr:7}],["+ HCA 12 个月",{hca:true,cwe:2}],["满 2 年",{cwe:2}],["英语只有 CLB 8",{en:8}]];
 let P={...BASE}, prev=null;
 
 const $=id=>document.getElementById(id);
@@ -232,7 +232,7 @@ function bandsBars(score){
   const routes=[
     ["CEC 专场","CEC","每 2 周左右一次，最主要的路线",
       p=>p.teer==2?"你的工作是 TEER 4/5，不算 CEC":(p.cwe<1?"先在加拿大合格工作满 1 年":null)],
-    ["医疗类","医疗","HCA 走这条",p=>p.hca?null:"先在 HCA 等医疗职业连续工作满 6 个月"],
+    ["医疗类","医疗","HCA 走这条",p=>p.hca?null:"先在 HCA 等医疗职业累计工作满 12 个月"],
     ["法语类","法语","线最低，但要会法语",p=>p.fr>=7?null:"法语四项先考到 NCLC 7"],
     ["省提名","省提名","拿到省提名直接 +600",p=>p.pnp?null:"先拿到省提名"],
   ];
