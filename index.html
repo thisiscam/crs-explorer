@@ -113,7 +113,7 @@ tr.sec td{font-weight:600}
         <li>CEC：3 年内累计 1560 小时，每周最多算 30 小时，必须是 TEER 0–3 的工作；全日制学习期间的工作不算。</li>
         <li>CEC 语言门槛：TEER 0/1 需要 CLB 7，TEER 2/3 需要 CLB 5。</li>
         <li>类别抽签（医疗、技工等）：3 年内在名单上的单一职业累计 12 个月全职（或等量兼职），不必连续，境内外都算。HCA（NOC 33102）在医疗类名单里；厨师（63200）和主厨（62200）原本在技工类名单里，<b>2026-02-18 被移除</b>，现在厨师走不了技工类。</li>
-        <li>2025 年 3 月起 job offer 不再加分；30 岁起年龄分逐年递减。</li>
+        <li>加拿大学历加分：1–2 年的学历 +15；3 年以上，<b>或者至少读满 1 学年的硕士/博士</b> +30。<li>2025 年 3 月起 job offer 不再加分；30 岁起年龄分逐年递减。</li>
       </ul>
     </details>
   </div>
@@ -171,12 +171,12 @@ const CTL=[
   ["工作 TEER","teer",[[0,"0/1"],[1,"2/3"],[2,"4/5"]]],
   ["学历","edu",EDU.map((e,i)=>[i,e[0]])],
   ["海外经验","fwe",[[0,"无"],[1,"1–2年"],[2,"3年+"]]],
-  ["加拿大学历","cdn",[[0,"无"],[1,"1–2年"],[2,"3年+"]]],
+  ["加拿大学历","cdn",[[0,"无"],[1,"1–2年"],[2,"3年+/硕士"]]],
   ["兄弟姐妹 PR","sib",[[false,"无"],[true,"有"]]],
   ["HCA 满 12 个月","hca",[[false,"否"],[true,"是"]]],
   ["省提名","pnp",[[false,"无"],[true,"有"]]],
 ];
-const BASE={link:true,age:26,en:9,fr:0,cwe:1,teer:1,edu:5,fwe:0,cdn:1,sib:false,hca:false,pnp:false};
+const BASE={link:true,age:26,en:9,fr:0,cwe:1,teer:1,edu:5,fwe:0,cdn:2,sib:false,hca:false,pnp:false};
 const PRESETS=[["现在",{cwe:0}],["CEC 满 1 年",{}],["+ 法语 NCLC 7",{fr:7}],["+ HCA 12 个月",{hca:true,cwe:2,age:27}],["满 2 年",{cwe:2,age:27}],["英语只有 CLB 8",{en:8}]];
 // 联动：经验每多 1 年，年龄也 +1（时间在流逝）
 function withVal(p,key,v){const q={...p,[key]:v}; if(key=="cwe"&&p.link) q.age=p.age+(v-p.cwe); return q;}
